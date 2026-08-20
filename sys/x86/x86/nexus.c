@@ -405,20 +405,43 @@ nexus_map_resource(device_t bus, device_t child, struct resource *r,
 	 */
 	switch (type) {
 	case SYS_RES_IOPORT:
+#ifdef PC98
+		if (start > BUS_SPACE_MAXADDR ||
+		    length - 1 > BUS_SPACE_MAXADDR - start)
+			return (EINVAL);
+		error = i386_bus_space_handle_alloc(X86_BUS_SPACE_IO,
+		    (bus_addr_t)start, (bus_size_t)length,
+		    &map->r_bushandle);
+		if (error != 0)
+			return (error);
+#else
 		map->r_bushandle = start;
+#endif
 		map->r_bustag = X86_BUS_SPACE_IO;
 		map->r_size = length;
 		map->r_vaddr = NULL;
 		break;
 	case SYS_RES_MEMORY:
 		map->r_vaddr = pmap_mapdev_attr(start, length, args.memattr);
+		if (map->r_vaddr == NULL)
+			return (ENOMEM);
 		map->r_bustag = X86_BUS_SPACE_MEM;
 		map->r_size = length;
 
 		/*
 		 * The handle is the virtual address.
 		 */
+#ifdef PC98
+		error = i386_bus_space_handle_alloc(X86_BUS_SPACE_MEM,
+		    (bus_addr_t)(uintptr_t)map->r_vaddr, (bus_size_t)length,
+		    &map->r_bushandle);
+		if (error != 0) {
+			pmap_unmapdev(map->r_vaddr, length);
+			return (error);
+		}
+#else
 		map->r_bushandle = (bus_space_handle_t)map->r_vaddr;
+#endif
 		break;
 	}
 	return (0);
@@ -437,6 +460,10 @@ nexus_unmap_resource(device_t bus, device_t child, struct resource *r,
 		pmap_unmapdev(map->r_vaddr, map->r_size);
 		/* FALLTHROUGH */
 	case SYS_RES_IOPORT:
+#ifdef PC98
+		i386_bus_space_handle_free(map->r_bustag, map->r_bushandle,
+		    map->r_size);
+#endif
 		break;
 	default:
 		return (EINVAL);
