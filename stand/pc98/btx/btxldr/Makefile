@@ -21,7 +21,7 @@ LDFLAGS=${LDFLAGS_BIN}
 CFLAGS.btxldr.S=	${CLANG_NO_IAS}
 
 BTXLDR_MAXSIZE?=	65536
-realall: btxldr-size-check
+all: btxldr-size-check
 btxldr-size-check: ${PROG}
 	@bytes=`stat -f %z ${PROG}`; \
 	    echo "${PROG}: $$bytes/${BTXLDR_MAXSIZE} bytes"; \

@@ -27,7 +27,7 @@ ${BOOT}.bin: ${BOOT}.out
 
 BOOT05_RAW_MAXSIZE?=	7168
 BOOT05_MAXSIZE?=	7168
-realall: boot0.5-size-check
+all: boot0.5-size-check
 boot0.5-size-check: ${BOOT}.bin ${BOOT}
 	@raw=`stat -f %z ${BOOT}.bin`; bytes=`stat -f %z ${BOOT}`; \
 	    echo "${BOOT}.bin: $$raw/${BOOT05_RAW_MAXSIZE} bytes"; \

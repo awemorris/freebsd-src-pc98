@@ -34,7 +34,7 @@ CFLAGS.btx.S=		${CLANG_NO_IAS}
 
 # BTX occupies the 0x9000--0xa000 real-mode window.
 BTX_MAXSIZE?=	4096
-realall: btx-size-check
+all: btx-size-check
 btx-size-check: ${PROG}
 	@bytes=`stat -f %z ${PROG}`; \
 	    echo "${PROG}: $$bytes/${BTX_MAXSIZE} bytes"; \

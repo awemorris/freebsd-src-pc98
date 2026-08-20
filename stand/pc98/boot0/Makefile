@@ -19,7 +19,7 @@ LDFLAGS=${LDFLAGS_BIN}
 .include <bsd.prog.mk>
 
 BOOT0_MAXSIZE?=	512
-realall: boot0-size-check
+all: boot0-size-check
 boot0-size-check: ${BOOT}
 	@bytes=`stat -f %z ${BOOT}`; \
 	    echo "${BOOT}: $$bytes/${BOOT0_MAXSIZE} bytes"; \
