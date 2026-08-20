@@ -44,32 +44,12 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/loader/conf.c 305125 2016-08-31 13:16:40Z
 
 /* Exported for libstand */
 struct devsw *devsw[] = {
-    &bioscd,
-    &biosdisk,
-#if defined(LOADER_NFS_SUPPORT) || defined(LOADER_TFTP_SUPPORT)
-    &pxedisk,
-#endif
+    &bioshd,
     NULL
 };
 
 struct fs_ops *file_system[] = {
     &ufs_fsops,
-    &ext2fs_fsops,
-    &dosfs_fsops,
-    &cd9660_fsops,
-#ifdef LOADER_NFS_SUPPORT 
-    &nfs_fsops,
-#endif
-#ifdef LOADER_TFTP_SUPPORT
-    &tftp_fsops,
-#endif
-#ifdef LOADER_GZIP_SUPPORT
-    &gzipfs_fsops,
-#endif
-#ifdef LOADER_BZIP2_SUPPORT
-    &bzipfs_fsops,
-#endif
-    &splitfs_fsops,
     NULL
 };
 
@@ -104,13 +84,6 @@ struct console *consoles[] = {
     NULL
 };
 
-extern struct pnphandler isapnphandler;
-extern struct pnphandler biospnphandler;
-extern struct pnphandler biospcihandler;
-
 struct pnphandler *pnphandlers[] = {
-    &biospnphandler,		/* should go first, as it may set isapnp_readport */
-    &isapnphandler,
-    &biospcihandler,
     NULL
 };

@@ -74,21 +74,6 @@ extern char end[];
 static void *heap_top;
 static void *heap_bottom;
 
-static uint64_t
-pc98_loadaddr(u_int type, void *data, uint64_t addr)
-{
-	struct stat st;
-
-	if (type == LOAD_ELF)
-		return (roundup(addr, PAGE_SIZE));
-
-	/* We cannot use 15M-16M area on pc98. */
-	if (type == LOAD_RAW && addr < 0x1000000 && stat(data, &st) == 0 &&
-	    (st.st_size == -1 || addr + st.st_size > 0xf00000))
-		addr = 0x1000000;
-	return (addr);
-}
-
 int
 main(void)
 {
@@ -172,8 +157,6 @@ main(void)
     archsw.arch_readin = i386_readin;
     archsw.arch_isainb = isa_inb;
     archsw.arch_isaoutb = isa_outb;
-    archsw.arch_loadaddr = pc98_loadaddr;
-
     /*
      * March through the device switch probing for things.
      */
@@ -210,25 +193,17 @@ extract_currdev(void)
     int				major;
     int				biosdev = -1;
 
-    /* Assume we are booting from a BIOS disk by default */
-    new_currdev.d_dev = &biosdisk;
+    bzero(&new_currdev, sizeof(new_currdev));
+
+    /* The first restoration milestone supports BIOS disks only. */
+    new_currdev.dd.d_dev = &bioshd;
 
     /* new-style boot loaders such as pxeldr and cdldr */
     if (kargs->bootinfo == 0) {
-        if ((kargs->bootflags & KARGS_FLAGS_CD) != 0) {
-	    /* we are booting from a CD with cdboot */
-	    new_currdev.d_dev = &bioscd;
-	    new_currdev.d_unit = bc_bios2unit(initial_bootdev);
-	} else if ((kargs->bootflags & KARGS_FLAGS_PXE) != 0) {
-	    /* we are booting from pxeldr */
-	    new_currdev.d_dev = &pxedisk;
-	    new_currdev.d_unit = 0;
-	} else {
-	    /* we don't know what our boot device is */
-	    new_currdev.d_kind.biosdisk.slice = -1;
-	    new_currdev.d_kind.biosdisk.partition = 0;
-	    biosdev = -1;
-	}
+	/* We don't know what our boot device is; use the disk fallback. */
+	new_currdev.d_kind.biosdisk.slice = -1;
+	new_currdev.d_kind.biosdisk.partition = 0;
+	biosdev = -1;
     } else if ((initial_bootdev & B_MAGICMASK) != B_DEVMAGIC) {
 	/* The passed-in boot device is bad */
 	new_currdev.d_kind.biosdisk.slice = -1;
@@ -253,17 +228,15 @@ extract_currdev(void)
 		biosdev = (major << 3) + 0x80 + B_UNIT(initial_bootdev);
 	}
     }
-    new_currdev.d_type = new_currdev.d_dev->dv_type;
-
     /*
      * If we are booting off of a BIOS disk and we didn't succeed in determining
      * which one we booted off of, just use disk0: as a reasonable default.
      */
-    if ((new_currdev.d_type == biosdisk.dv_type) &&
-	((new_currdev.d_unit = bd_bios2unit(biosdev)) == -1)) {
+    if ((new_currdev.dd.d_dev->dv_type == bioshd.dv_type) &&
+	((new_currdev.dd.d_unit = bd_bios2unit(biosdev)) == -1)) {
 	printf("Can't work out which disk we are booting from.\n"
 	       "Guessed BIOS device 0x%x not found by probes, defaulting to disk0:\n", biosdev);
-	new_currdev.d_unit = 0;
+	new_currdev.dd.d_unit = 0;
     }
 
     env_setenv("currdev", EV_VOLATILE, i386_fmtdev(&new_currdev),

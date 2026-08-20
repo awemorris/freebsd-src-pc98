@@ -125,7 +125,7 @@ static int	bd_open(struct open_file *f, ...);
 static int	bd_close(struct open_file *f);
 static int	bd_print(int verbose);
 
-struct devsw biosdisk = {
+struct devsw bioshd = {
     "disk", 
     DEVT_DISK, 
     bd_init,
@@ -264,7 +264,7 @@ bd_print(int verbose)
     if (nbdinfo == 0)
 	return (0);
 
-    printf("%s devices:", biosdisk.dv_name);
+    printf("%s devices:", bioshd.dv_name);
     if ((ret = pager_output("\n")) != 0)
 	return (ret);
 
