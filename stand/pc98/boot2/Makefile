@@ -98,7 +98,7 @@ boot2.o: boot2.s
 
 SRCS=	boot2.c boot2.h
 
-boot2.s: boot2.c boot2.h ${.CURDIR}/../../common/ufsread.c
+boot2.s: boot2.c boot2.h ${BOOTSRC}/libsa/ufsread.c
 	${CC} ${CFLAGS} -S -o boot2.s.tmp ${.CURDIR}/boot2.c
 	sed -e '/align/d' -e '/nop/d' < boot2.s.tmp > boot2.s
 	rm -f boot2.s.tmp
