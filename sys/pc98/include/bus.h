@@ -179,6 +179,8 @@ struct bus_space_tag {
 struct bus_space_handle {
 	bus_addr_t	bsh_base;
 	size_t		bsh_sz;
+	u_int		bsh_flags;
+#define	BSH_OWN_MAPPING	0x0001	/* direct MEM map owns the pmap VA */
 
 	bus_addr_t	bsh_iat[BUS_SPACE_IAT_MAXSIZE];
 	size_t		bsh_maxiatsz;
