@@ -40,7 +40,7 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/libpc98/biosdisk.c 310850 2016-12-30 19:0
 #include <stand.h>
 
 #include <sys/disklabel.h>
-#include <sys/diskpc98.h>
+#include <sys/disk/pc98.h>
 #include <machine/bootinfo.h>
 
 #include <stdarg.h>
@@ -602,7 +602,7 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
     /*
      * If we are looking at a BSD slice, and the partition is < 0, assume the 'a' partition
      */
-    if ((dptr->dp_mid == DOSMID_386BSD) && (dev->d_kind.biosdisk.partition < 0))
+    if ((dptr->dp_mid == __DOSMID_386BSD) && (dev->d_kind.biosdisk.partition < 0))
 	dev->d_kind.biosdisk.partition = 0;
 
  unsliced:

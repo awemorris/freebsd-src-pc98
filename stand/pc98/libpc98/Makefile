@@ -17,8 +17,10 @@ CFLAGS+=	-DCOMPORT=${BOOT_COMCONSOLE_PORT}
 BOOT_COMCONSOLE_SPEED?=	9600
 CFLAGS+=	-DCOMSPEED=${BOOT_COMCONSOLE_SPEED}
 CFLAGS+=	-DTERM_EMU -Dalloca=__builtin_alloca
-CFLAGS+=	-I${BOOTSRC}/pc98 -I${LDRSRC} -I${BOOTSRC}/i386/common \
-	-I${BTXLIB}
+CFLAGS+=	-I${BOOTSRC}/pc98 -I${BOOTSRC}/i386/libi386 \
+	-I${LDRSRC} -I${BOOTSRC}/i386/common -I${BTXLIB}
+CFLAGS+=	-I${ZFSSRC} -I${SYSDIR}/cddl/boot/zfs \
+	-I${SYSDIR}/cddl/contrib/opensolaris/uts/common
 CFLAGS+=	${FORMAT_EXTENSIONS}
 
 .include <bsd.lib.mk>
