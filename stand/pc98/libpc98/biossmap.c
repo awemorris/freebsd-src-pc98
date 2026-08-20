@@ -47,7 +47,8 @@ pc98_smap_valid(void)
 	previous_end = 0;
 	for (i = 0; i < pc98_smaplen; i++) {
 		if (pc98_smap[i].length == 0 ||
-		    pc98_smap[i].base > UINT64_MAX - pc98_smap[i].length)
+		    pc98_smap[i].base >
+		    ~(uint64_t)0 - pc98_smap[i].length)
 			return (0);
 		end = pc98_smap[i].base + pc98_smap[i].length;
 		if (i != 0 && pc98_smap[i].base < previous_end)
