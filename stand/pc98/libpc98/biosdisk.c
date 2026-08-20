@@ -275,7 +275,7 @@ bd_print(int verbose)
 	    break;
 
 	/* try to open the whole disk */
-	dev.d_unit = i;
+	dev.dd.d_unit = i;
 	dev.d_kind.biosdisk.slice = -1;
 	dev.d_kind.biosdisk.partition = -1;
 	
