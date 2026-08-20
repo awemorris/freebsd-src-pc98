@@ -166,6 +166,8 @@ main(void)
 
     extract_currdev();				/* set $currdev and $loaddev */
     setenv("LINES", "24", 1);			/* optional */
+	/* The minimal recovery loader enters its prompt unless a script boots. */
+	setenv("autoboot_delay", "NO", 1);
 
     bios_getsmap();
 
