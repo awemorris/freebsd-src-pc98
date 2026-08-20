@@ -101,7 +101,7 @@ static struct bdinfo
 } bdinfo [MAXBDDEV];
 static int nbdinfo = 0;
 
-#define	BD(dev)	(bdinfo[(dev)->d_unit])
+#define	BD(dev)	(bdinfo[(dev)->dd.d_unit])
 
 static int	bd_getgeom(struct open_disk *od);
 static int	bd_read(struct open_disk *od, daddr_t dblk, int blks,
@@ -161,8 +161,11 @@ bd_bios2unit(int biosdev)
 }
 
 int
-bd_unit2bios(int unit)
+bd_unit2bios(struct i386_devdesc *dev)
 {
+    int unit;
+
+    unit = dev->dd.d_unit;
     if ((unit >= 0) && (unit < nbdinfo))
 	return(bdinfo[unit].bd_unit);
     return(-1);
@@ -454,7 +457,7 @@ bd_open(struct open_file *f, ...)
     /*
      * Save our context
      */
-    ((struct i386_devdesc *)(f->f_devdata))->d_kind.biosdisk.data = od;
+    ((struct i386_devdesc *)(f->f_devdata))->dd.d_opendata = od;
     DEBUG("open_disk %p, partition at 0x%x", od, od->od_boff);
     return(0);
 }
@@ -465,7 +468,7 @@ bd_opendisk(struct open_disk **odp, struct i386_devdesc *dev)
     struct open_disk		*od;
     int				error;
 
-    if (dev->d_unit >= nbdinfo) {
+    if (dev->dd.d_unit >= nbdinfo) {
 	DEBUG("attempt to open nonexistent disk");
 	return(ENXIO);
     }
@@ -477,13 +480,13 @@ bd_opendisk(struct open_disk **odp, struct i386_devdesc *dev)
     }
 
     /* Look up BIOS unit number, intialise open_disk structure */
-    od->od_dkunit = dev->d_unit;
+    od->od_dkunit = dev->dd.d_unit;
     od->od_unit = bdinfo[od->od_dkunit].bd_unit;
     od->od_flags = bdinfo[od->od_dkunit].bd_flags;
     od->od_boff = 0;
     error = 0;
     DEBUG("open '%s', unit 0x%x slice %d partition %d",
-	     i386_fmtdev(dev), dev->d_unit, 
+	     i386_fmtdev(dev), dev->dd.d_unit,
 	     dev->d_kind.biosdisk.slice, dev->d_kind.biosdisk.partition);
 
     /* Get geometry for this open (removable device may have changed) */
@@ -721,7 +724,7 @@ static int
 bd_close(struct open_file *f)
 {
     struct i386_devdesc		*dev = f->f_devdata;
-    struct open_disk	*od = (struct open_disk *)(dev->d_kind.biosdisk.data);
+    struct open_disk	*od = (struct open_disk *)(dev->dd.d_opendata);
 
     BD(dev).bd_open--;
     if (BD(dev).bd_open == 0) {
@@ -751,7 +754,7 @@ bd_strategy(void *devdata, int rw, daddr_t dblk, size_t size,
 {
     struct bcache_devdata	bcd;
     struct i386_devdesc		*dev = devdata;
-    struct open_disk	*od = (struct open_disk *)(dev->d_kind.biosdisk.data);
+    struct open_disk	*od = (struct open_disk *)(dev->dd.d_opendata);
 
     bcd.dv_strategy = bd_realstrategy;
     bcd.dv_devdata = devdata;
@@ -763,7 +766,7 @@ static int
 bd_realstrategy(void *devdata, int rw, daddr_t dblk,
     size_t size, char *buf, size_t *rsize)
 {
-    struct open_disk	*od = (struct open_disk *)(((struct i386_devdesc *)devdata)->d_kind.biosdisk.data);
+    struct open_disk	*od = (struct open_disk *)(((struct i386_devdesc *)devdata)->dd.d_opendata);
     int			blks;
 #ifdef BD_SUPPORT_FRAGS
     char		fragbuf[BIOSDISK_SECSIZE];
@@ -1066,8 +1069,8 @@ bd_getdev(struct i386_devdesc *dev)
     char			*nip, *cp;
     int				unitofs = 0, i, unit;
 
-    biosdev = bd_unit2bios(dev->d_unit);
-    DEBUG("unit %d BIOS device %d", dev->d_unit, biosdev);
+    biosdev = bd_unit2bios(dev);
+    DEBUG("unit %d BIOS device %d", dev->dd.d_unit, biosdev);
     if (biosdev == -1)				/* not a BIOS device */
 	return(-1);
     if (bd_opendisk(&od, dev) != 0)		/* oops, not a viable device */
@@ -1075,7 +1078,7 @@ bd_getdev(struct i386_devdesc *dev)
 
     if ((biosdev & 0xf0) == 0x90 || (biosdev & 0xf0) == 0x30) {
 	/* floppy (or emulated floppy) or ATAPI device */
-	if (bdinfo[dev->d_unit].bd_type == DT_ATAPI) {
+	if (bdinfo[dev->dd.d_unit].bd_type == DT_ATAPI) {
 	    /* is an ATAPI disk */
 	    major = WFDMAJOR;
 	} else {
@@ -1101,7 +1104,7 @@ bd_getdev(struct i386_devdesc *dev)
     }
     /* default root disk unit number */
     if ((biosdev & 0xf0) == 0xa0)
-	unit = bdinfo[dev->d_unit].bd_da_unit;
+	unit = bdinfo[dev->dd.d_unit].bd_da_unit;
     else
 	unit = biosdev & 0xf;
 
