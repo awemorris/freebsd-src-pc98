@@ -6,8 +6,10 @@ NO_OBJ=t
 
 # boot2 consumes the PC-98 BTX artifacts.  Keep the ordering explicit even
 # when the surrounding stand tree is built in parallel.
-SUBDIR.yes+=	btx
+SUBDIR.yes+=	btx libpc98
 SUBDIR.yes+=	.WAIT
-SUBDIR.yes+=	boot0 boot0.5 boot2
+SUBDIR.yes+=	boot0 boot0.5 boot2 loader_simp
+
+SUBDIR_DEPEND_loader_simp+=	btx libpc98
 
 .include <bsd.subdir.mk>
