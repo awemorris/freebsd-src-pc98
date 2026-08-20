@@ -1,0 +1,17 @@
+#
+# DEFAULTS -- Default kernel configuration for FreeBSD/pc98
+#
+
+machine		pc98 i386
+options		PC98
+
+# Core PC-98 C-Bus and interrupt-controller selection.
+device		isa
+options		ISAPNP
+device		atpic
+
+# Privileged user interfaces required by i386 kernels.
+device		mem
+device		io
+
+options		NEW_PCIB

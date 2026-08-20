@@ -1,0 +1,18 @@
+#
+# QEMU_PC98 -- minimal Pentium-II/UP kernel for qemu-pc98
+#
+
+include		DEFAULTS
+
+cpu		I686_CPU
+ident		QEMU_PC98
+
+options		SCHED_4BSD
+options		FFS
+options		MD_ROOT
+options		KDB
+options		KDB_TRACE
+options		INCLUDE_CONFIG_FILE
+
+device		loop
+device		random
