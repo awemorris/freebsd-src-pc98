@@ -73,7 +73,7 @@ struct open_disk {
     int			od_sec;
     int			od_boff;		/* block offset from beginning of BIOS disk */
     int			od_flags;
-#define BD_MODEINT13		0x0000
+#define BD_MODEINT1B		0x0000
 #define BD_MODEEDD1		0x0001
 #define BD_MODEEDD3		0x0002
 #define BD_MODEMASK		0x0003
@@ -109,7 +109,7 @@ static int	bd_read(struct open_disk *od, daddr_t dblk, int blks,
 static int	bd_write(struct open_disk *od, daddr_t dblk, int blks,
 		    caddr_t dest);
 
-static int	bd_int13probe(struct bdinfo *bd);
+static int	bd_int1bprobe(struct bdinfo *bd);
 
 static int	bd_printslice(struct open_disk *od, struct pc98_partition *dp,
 		    char *prefix, int verbose);
@@ -188,7 +188,7 @@ bd_init(void)
 	    bdinfo[nbdinfo].bd_unit = unit;
 	    bdinfo[nbdinfo].bd_flags = (unit & 0xf0) == 0x90 ? BD_FLOPPY : 0;
 
-	    if (!bd_int13probe(&bdinfo[nbdinfo])){
+	    if (!bd_int1bprobe(&bdinfo[nbdinfo])){
 		if (((unit & 0xf0) == 0x90 && (unit & 0x0f) < 4) ||
 		    ((unit & 0xf0) == 0xa0 && (unit & 0x0f) < 6))
 		    continue;	/* Target IDs are not contiguous. */
@@ -219,10 +219,10 @@ bd_init(void)
 }
 
 /*
- * Try to detect a device supported by the legacy int13 BIOS
+ * Try to detect a device supported by the PC-98 INT 1Bh BIOS interface.
  */
 static int
-bd_int13probe(struct bdinfo *bd)
+bd_int1bprobe(struct bdinfo *bd)
 {
     int addr;
 
@@ -235,14 +235,14 @@ bd_int13probe(struct bdinfo *bd)
 	    addr = 0xa1482;
     }
     if ( *(u_char *)PTOV(addr) & (1<<(bd->bd_unit & 0x0f))) {
-	bd->bd_flags |= BD_MODEINT13;
+	bd->bd_flags |= BD_MODEINT1B;
 	return(1);
     }
     if ((bd->bd_unit & 0xF0) == 0xA0) {
 	int media = ((unsigned *)PTOV(0xA1460))[bd->bd_unit & 0x0F] & 0x1F;
 
 	if (media == 7) { /* MO */
-	    bd->bd_flags |= BD_MODEINT13 | BD_OPTICAL;
+	    bd->bd_flags |= BD_MODEINT1B | BD_OPTICAL;
 	    return(1);
 	}
     }
@@ -1008,7 +1008,7 @@ bd_getgeom(struct open_disk *od)
 /*
  * Return the BIOS geometry of a given "fixed drive" in a format
  * suitable for the legacy bootinfo structure.  Since the kernel is
- * expecting raw int 0x13/0x8 values for N_BIOS_GEOM drives, we
+ * expecting raw INT 1Bh geometry values for N_BIOS_GEOM drives, we
  * prefer to get the information directly, rather than rely on being
  * able to put it together from information already maintained for
  * different purposes and for a probably different number of drives.
