@@ -38,6 +38,9 @@ CLEANFILES+=	${LOADER} ${LOADER}.bin
 ORG=		0x0
 CFLAGS+=	-Wall -I${BOOTSRC}/pc98 -I${BOOTSRC}/i386
 LDFLAGS+=	-static ${LDFLAGS_ORG} -Wl,--gc-sections
+.if ${LINKER_TYPE} == "lld" && ${LINKER_VERSION} >= 130000
+LDFLAGS+=	-Wl,-z,nostart-stop-gc
+.endif
 
 LIBPC98=	${BOOTOBJ}/pc98/libpc98/libpc98.a
 LIBSA32:=	${LIBSA}
