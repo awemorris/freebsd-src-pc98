@@ -129,13 +129,130 @@ isa_alloc_resource(device_t bus, device_t child, int type, int *rid,
 				   start, end, count, flags);
 }
 
+#ifdef PC98
+/*
+ * Reserve a sparse PC-98 I/O vector as independent contiguous extents.
+ * The primary handle owns the array of secondary resources.  Allocation is
+ * all-or-nothing and every failure path releases in strict reverse order.
+ */
+struct resource *
+isa_alloc_resourcev(device_t child, int type, int *rid, bus_addr_t *res,
+    bus_size_t count, u_int flags)
+{
+	struct isa_device *idev;
+	struct resource_list *rl;
+	struct resource **resources;
+	struct resource *primary;
+	bus_space_handle_t bh;
+	device_t bus;
+	rman_res_t base;
+	bus_size_t i, j, nsegments;
+	int allocated, bsrid;
+
+	if (child == NULL || rid == NULL || res == NULL || *rid < 0 ||
+	    count == 0 || count > BUS_SPACE_IAT_MAXSIZE)
+		return (NULL);
+	if (type != SYS_RES_IOPORT && type != SYS_RES_MEMORY)
+		return (NULL);
+
+	for (i = 1; i < count; i++)
+		if (res[i] <= res[i - 1])
+			return (NULL);
+
+	base = bus_get_resource_start(child, type, *rid);
+	if (base > BUS_SPACE_MAXADDR)
+		return (NULL);
+	for (i = 0; i < count; i++)
+		if (res[i] > BUS_SPACE_MAXADDR - base)
+			return (NULL);
+
+	nsegments = 1;
+	for (i = 1; i < count; i++)
+		if (res[i] != res[i - 1] + 1)
+			nsegments++;
+
+	resources = malloc(sizeof(*resources) * nsegments, M_DEVBUF,
+	    M_NOWAIT | M_ZERO);
+	if (resources == NULL)
+		return (NULL);
+
+	idev = DEVTOISA(child);
+	rl = &idev->id_resources;
+	bus = device_get_parent(child);
+	allocated = 0;
+	for (i = 0; i < count; i = j) {
+		for (j = i + 1; j < count && res[j] == res[j - 1] + 1; j++)
+			;
+		bsrid = *rid + allocated;
+		resources[allocated] = isa_alloc_resource(bus, child, type,
+		    &bsrid, base + res[i], base + res[j - 1], j - i, flags);
+		if (resources[allocated] == NULL)
+			goto fail;
+		allocated++;
+	}
+
+	primary = resources[0];
+	bh = rman_get_bushandle(primary);
+	if (bh == NULL)
+		goto fail;
+	bh->bsh_res = resources;
+	bh->bsh_ressz = nsegments;
+	return (primary);
+
+fail:
+	while (allocated != 0) {
+		allocated--;
+		(void)resource_list_release(rl, bus, child,
+		    resources[allocated]);
+	}
+	free(resources, M_DEVBUF);
+	return (NULL);
+}
+
+int
+isa_load_resourcev(struct resource *r, bus_addr_t *res, bus_size_t count)
+{
+
+	if (r == NULL)
+		return (EINVAL);
+	return (bus_space_map_load(rman_get_bustag(r), rman_get_bushandle(r),
+	    count, res, 0));
+}
+#endif
+
 int
 isa_release_resource(device_t bus, device_t child, struct resource *r)
 {
 	struct isa_device* idev = DEVTOISA(child);
 	struct resource_list *rl = &idev->id_resources;
 
-	return resource_list_release(rl, bus, child, r);
+#ifdef PC98
+	struct resource **resources;
+	bus_space_handle_t bh;
+	size_t count;
+	int error, i, primary_error, type;
+
+	error = 0;
+	type = rman_get_type(r);
+	if (type == SYS_RES_MEMORY || type == SYS_RES_IOPORT) {
+		bh = rman_get_bushandle(r);
+		if (bh != NULL && bh->bsh_res != NULL) {
+			resources = bh->bsh_res;
+			count = bh->bsh_ressz;
+			bh->bsh_res = NULL;
+			bh->bsh_ressz = 0;
+			for (i = (int)count - 1; i > 0; i--)
+				if (resource_list_release(rl, bus, child,
+				    resources[i]) != 0)
+					error = EBUSY;
+			free(resources, M_DEVBUF);
+		}
+	}
+	primary_error = resource_list_release(rl, bus, child, r);
+	return (error != 0 ? error : primary_error);
+#else
+	return (resource_list_release(rl, bus, child, r));
+#endif
 }
 
 /*

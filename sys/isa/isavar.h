@@ -186,6 +186,13 @@ void	isa_hint_device_unit(device_t bus, device_t child, const char *name,
 	    int *unitp);
 int	isab_attach(device_t dev);
 
+#ifdef PC98
+struct resource *isa_alloc_resourcev(device_t child, int type, int *rid,
+	    bus_addr_t *res, bus_size_t count, u_int flags);
+int	isa_load_resourcev(struct resource *r, bus_addr_t *res,
+	    bus_size_t count);
+#endif
+
 #endif /* _KERNEL */
 
 #endif /* !_ISA_ISAVAR_H_ */
