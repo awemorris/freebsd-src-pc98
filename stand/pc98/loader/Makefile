@@ -37,6 +37,7 @@ CFLAGS+=	-Wall -I${BOOTSRC}/pc98 -I${BOOTSRC}/i386
 LDFLAGS+=	-static ${LDFLAGS_ORG} -Wl,--gc-sections
 
 LIBPC98=	${BOOTOBJ}/pc98/libpc98/libpc98.a
+LIBSA32:=	${LIBSA}
 
 ${LOADER}: ${LOADER}.bin ${BTXLDR} ${BTXKERN}
 	btxld -v -f aout -e ${LOADER_ADDRESS} -o ${.TARGET} -l ${BTXLDR} \
