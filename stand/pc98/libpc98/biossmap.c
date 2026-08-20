@@ -31,7 +31,7 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/libpc98/biossmap.c 164115 2006-11-09 08:2
 #include <sys/param.h>
 #include <sys/linker.h>
 #include <machine/metadata.h>
-#include <machine/pc/bios.h>
+#include <i386/pc/bios.h>
 #include "bootstrap.h"
 #include "libi386.h"
 
