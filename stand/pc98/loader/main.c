@@ -136,20 +136,6 @@ main(void)
      */
     bcache_init(32768, 512);
 
-    /*
-     * Special handling for PXE and CD booting.
-     */
-    if (kargs->bootinfo == 0) {
-	/*
-	 * We only want the PXE disk to try to init itself in the below
-	 * walk through devsw if we actually booted off of PXE.
-	 */
-	if (kargs->bootflags & KARGS_FLAGS_PXE)
-	    pxe_enable(kargs->pxeinfo ? PTOV(kargs->pxeinfo) : NULL);
-	else if (kargs->bootflags & KARGS_FLAGS_CD)
-	    bc_add(initial_bootdev);
-    }
-
     archsw.arch_autoload = i386_autoload;
     archsw.arch_getdev = i386_getdev;
     archsw.arch_copyin = i386_copyin;

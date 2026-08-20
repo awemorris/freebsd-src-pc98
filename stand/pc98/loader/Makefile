@@ -31,6 +31,9 @@ HELP_FILES=	${BOOTSRC}/pc98/loader/help.pc98
 
 .include	"${BOOTSRC}/loader.mk"
 
+# ${MACHINE} is pc98, so loader.mk cannot infer the 32-bit ELF readers.
+SRCS+=		load_elf32.c load_elf32_obj.c reloc_elf32.c
+
 CLEANFILES+=	${LOADER} ${LOADER}.bin
 ORG=		0x0
 CFLAGS+=	-Wall -I${BOOTSRC}/pc98 -I${BOOTSRC}/i386
