@@ -31,3 +31,11 @@ LDFLAGS=${LDFLAGS_BIN}
 
 # XXX: clang integrated-as doesn't grok .codeNN directives yet
 CFLAGS.btx.S=		${CLANG_NO_IAS}
+
+# BTX occupies the 0x9000--0xa000 real-mode window.
+BTX_MAXSIZE?=	4096
+realall: btx-size-check
+btx-size-check: ${PROG}
+	@bytes=`stat -f %z ${PROG}`; \
+	    echo "${PROG}: $$bytes/${BTX_MAXSIZE} bytes"; \
+	    test $$bytes -le ${BTX_MAXSIZE}

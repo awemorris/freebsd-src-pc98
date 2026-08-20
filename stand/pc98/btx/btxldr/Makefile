@@ -19,3 +19,10 @@ LDFLAGS=${LDFLAGS_BIN}
 
 # XXX: clang integrated-as doesn't grok .codeNN directives yet
 CFLAGS.btxldr.S=	${CLANG_NO_IAS}
+
+BTXLDR_MAXSIZE?=	65536
+realall: btxldr-size-check
+btxldr-size-check: ${PROG}
+	@bytes=`stat -f %z ${PROG}`; \
+	    echo "${PROG}: $$bytes/${BTXLDR_MAXSIZE} bytes"; \
+	    test $$bytes -le ${BTXLDR_MAXSIZE}

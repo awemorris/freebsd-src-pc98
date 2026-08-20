@@ -117,5 +117,19 @@ boot2.h: boot1.out
 
 .include <bsd.prog.mk>
 
+BOOT1_MAXSIZE?=	512
+BOOT2_MAXSIZE?=	7680
+BOOT_MAXSIZE?=	8192
+realall: boot-stage-size-check
+boot-stage-size-check: boot1 boot2 boot
+	@boot1_bytes=`stat -f %z boot1`; \
+	    boot2_bytes=`stat -f %z boot2`; boot_bytes=`stat -f %z boot`; \
+	    echo "boot1: $$boot1_bytes/${BOOT1_MAXSIZE} bytes"; \
+	    echo "boot2: $$boot2_bytes/${BOOT2_MAXSIZE} bytes"; \
+	    echo "boot: $$boot_bytes/${BOOT_MAXSIZE} bytes"; \
+	    test $$boot1_bytes -le ${BOOT1_MAXSIZE}; \
+	    test $$boot2_bytes -le ${BOOT2_MAXSIZE}; \
+	    test $$boot_bytes -le ${BOOT_MAXSIZE}
+
 # XXX: clang integrated-as doesn't grok .codeNN directives yet
 CFLAGS.boot1.S=		${CLANG_NO_IAS}
