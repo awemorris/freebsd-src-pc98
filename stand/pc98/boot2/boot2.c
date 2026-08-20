@@ -19,7 +19,7 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/boot2/boot2.c 294925 2016-01-27 16:36:18Z
 
 #include <sys/param.h>
 #include <sys/disklabel.h>
-#include <sys/diskpc98.h>
+#include <sys/disk/pc98.h>
 #include <sys/dirent.h>
 #include <sys/reboot.h>
 
@@ -309,7 +309,7 @@ check_slice(void)
 	return (WHOLE_DISK_SLICE);	/* Read error */
     dp = (void *)(sec + PC98_PARTOFF);
     for (i = 0; i < PC98_NPARTS; i++) {
-	if (dp[i].dp_mid == DOSMID_386BSD) {
+	if (dp[i].dp_mid == __DOSMID_386BSD) {
 	    if (dp[i].dp_scyl <= cyl && cyl <= dp[i].dp_ecyl)
 		return (BASE_SLICE + i);
 	}
@@ -615,7 +615,7 @@ dskread(void *buf, unsigned lba, unsigned nblk)
 	sl = dsk.slice;
 	if (sl < BASE_SLICE) {
 	    for (i = 0; i < PC98_NPARTS; i++)
-		if (dp[i].dp_mid == DOSMID_386BSD) {
+		if (dp[i].dp_mid == __DOSMID_386BSD) {
 		    sl = BASE_SLICE + i;
 		    break;
 		}
@@ -623,7 +623,7 @@ dskread(void *buf, unsigned lba, unsigned nblk)
 	}
 	if (sl != WHOLE_DISK_SLICE) {
 	    dp += sl - BASE_SLICE;
-	    if (dp->dp_mid != DOSMID_386BSD) {
+	    if (dp->dp_mid != __DOSMID_386BSD) {
 		reason = "slice";
 		goto error;
 	    }
