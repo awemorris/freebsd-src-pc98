@@ -28,6 +28,12 @@ S=	./@
 S=	../../..
 .endif
 .endif
+
+# PC-98 executes the current i386 entry ABI and therefore uses the same
+# linker layout and symbols.  Keep this explicit: the machine name alone
+# would otherwise select a non-existent ldscript.pc98.
+LDSCRIPT_NAME?=	ldscript.${MACHINE_ARCH}
+
 .include "$S/conf/kern.pre.mk"
 
 INCLUDES+= -I$S/contrib/libfdt
