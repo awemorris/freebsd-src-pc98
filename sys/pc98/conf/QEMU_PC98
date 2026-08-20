@@ -19,4 +19,6 @@ options		KDB_TRACE
 options		INCLUDE_CONFIG_FILE
 
 device		loop
+device		ether
+device		pci
 device		random
