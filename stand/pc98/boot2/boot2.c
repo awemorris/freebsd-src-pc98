@@ -493,7 +493,10 @@ parse()
     char *ep, *p, *q;
     const char *cp;
     unsigned int drv;
-    int c, i, j;
+    int c, i;
+#if SERIAL
+    int j;
+#endif
     size_t k;
 
     while ((c = *arg++)) {
