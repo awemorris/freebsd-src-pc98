@@ -33,7 +33,7 @@ HELP_FILES=	${BOOTSRC}/pc98/loader/help.pc98
 
 CLEANFILES+=	${LOADER} ${LOADER}.bin
 ORG=		0x0
-CFLAGS+=	-Wall -I${BOOTSRC}/pc98
+CFLAGS+=	-Wall -I${BOOTSRC}/pc98 -I${BOOTSRC}/i386
 LDFLAGS+=	-static ${LDFLAGS_ORG} -Wl,--gc-sections
 
 LIBPC98=	${BOOTOBJ}/pc98/libpc98/libpc98.a
