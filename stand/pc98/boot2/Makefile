@@ -90,7 +90,12 @@ boot2.ldr:
 boot2.bin: boot2.out
 	${OBJCOPY} -S -O binary boot2.out ${.TARGET}
 
-boot2.out: ${BTXCRT} boot2.o sio.o
+# The stable/12 libsa ufs reader uses 64-bit shifts even in this compact
+# 32-bit boot program.
+.PATH: ${SRCTOP}/contrib/llvm-project/compiler-rt/lib/builtins
+CFLAGS.ashldi3.c=	-Wno-missing-prototypes -Wno-missing-declarations
+CLEANFILES+=	ashldi3.o
+boot2.out: ${BTXCRT} boot2.o sio.o ashldi3.o
 	${LD} ${LD_FLAGS} -Ttext ${ORG2} -o ${.TARGET} ${.ALLSRC}
 
 boot2.o: boot2.s
