@@ -32,6 +32,7 @@
 
 void	pc98_init_dmac(void);
 unsigned int	pc98_getmemsize(unsigned *, unsigned *);
+void	pc98_early_entry_checkpoint(unsigned int);
 
 #define	PC98_VECTOR_SIZE			(0x400)
 #define	PC98_SYSTEM_PARAMETER_SIZE		(0x240)

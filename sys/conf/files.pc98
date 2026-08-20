@@ -615,6 +615,7 @@ x86/pci/qpi.c			optional pci
 x86/x86/autoconf.c		standard
 pc98/pc98/busio.s		standard
 pc98/pc98/busiosubr.c		standard
+pc98/pc98/pc98_entry.c		standard
 x86/x86/busdma_bounce.c		standard
 x86/x86/busdma_machdep.c	standard
 x86/x86/cpu_machdep.c		standard

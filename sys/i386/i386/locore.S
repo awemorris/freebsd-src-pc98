@@ -140,6 +140,12 @@ ENTRY(btext)
 
 	xorl	%ebp,%ebp		/* mark end of frames */
 
+#ifdef PC98
+	pushl	physfree
+	call	pc98_early_entry_checkpoint
+	addl	$4,%esp
+#endif
+
 	pushl	physfree		/* value of first for init386(first) */
 	call	init386			/* wire 386 chip for unix operation */
 
