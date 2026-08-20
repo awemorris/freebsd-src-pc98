@@ -29,10 +29,64 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/libpc98/biossmap.c 164115 2006-11-09 08:2
 
 #include <stand.h>
 #include <sys/param.h>
+#include <sys/linker.h>
+#include <machine/metadata.h>
+#include <machine/pc/bios.h>
+#include "bootstrap.h"
 #include "libi386.h"
+
+static struct bios_smap pc98_smap[3];
+static u_int pc98_smaplen;
+
+void
+bios_getsmap(void)
+{
+	uint64_t top;
+
+	pc98_smaplen = 0;
+	top = memtop;
+	if (bios_basemem != 0) {
+		pc98_smap[pc98_smaplen].base = 0;
+		pc98_smap[pc98_smaplen].length = bios_basemem;
+		pc98_smap[pc98_smaplen].type = SMAP_TYPE_MEMORY;
+		pc98_smaplen++;
+	}
+	if (bios_basemem < 0x100000) {
+		pc98_smap[pc98_smaplen].base = bios_basemem;
+		pc98_smap[pc98_smaplen].length = 0x100000 - bios_basemem;
+		pc98_smap[pc98_smaplen].type = SMAP_TYPE_RESERVED;
+		pc98_smaplen++;
+	}
+	if (top > 0x100000) {
+		pc98_smap[pc98_smaplen].base = 0x100000;
+		pc98_smap[pc98_smaplen].length = top - 0x100000;
+		pc98_smap[pc98_smaplen].type = SMAP_TYPE_MEMORY;
+		pc98_smaplen++;
+	}
+}
 
 void
 bios_addsmapdata(struct preloaded_file *kfp)
 {
+	size_t size;
 
+	if (pc98_smaplen == 0)
+		return;
+	size = pc98_smaplen * sizeof(pc98_smap[0]);
+	file_addmetadata(kfp, MODINFOMD_SMAP, size, pc98_smap);
+}
+
+COMMAND_SET(smap, "smap", "show PC-98 memory map", command_smap);
+
+static int
+command_smap(int argc, char *argv[])
+{
+	u_int i;
+
+	for (i = 0; i < pc98_smaplen; i++)
+		printf("SMAP type=%02x base=%016llx len=%016llx\n",
+		    (unsigned int)pc98_smap[i].type,
+		    (unsigned long long)pc98_smap[i].base,
+		    (unsigned long long)pc98_smap[i].length);
+	return (pc98_smaplen == 0 ? CMD_ERROR : CMD_OK);
 }

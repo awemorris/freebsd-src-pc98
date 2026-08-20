@@ -131,6 +131,13 @@ main(void)
 	setenv("console", "nullconsole", 1);
     cons_probe();
 
+    printf("PC-98 15-16MiB memory: %s "
+	"(port 0x43b %#x->%#x, low16=%uKiB)\n",
+	pc98_sys16m_ram ? "RAM; PEGC window disabled" :
+	"not trusted; memory capped below the window",
+	pc98_sys16m_before, pc98_sys16m_after,
+	(unsigned int)pc98_low16_units * 128 + 1024);
+
     /*
      * Initialise the block cache. Set the upper limit.
      */
@@ -159,6 +166,8 @@ main(void)
 
     extract_currdev();				/* set $currdev and $loaddev */
     setenv("LINES", "24", 1);			/* optional */
+
+    bios_getsmap();
 
     interact();				/* doesn't return */
 

@@ -27,3 +27,8 @@
  */
 
 void set_machine_type(void);
+
+extern uint8_t pc98_sys16m_before;
+extern uint8_t pc98_sys16m_after;
+extern uint8_t pc98_low16_units;
+extern int pc98_sys16m_ram;

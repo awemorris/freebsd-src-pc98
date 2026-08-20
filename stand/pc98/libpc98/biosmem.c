@@ -31,11 +31,19 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/libpc98/biosmem.c 298230 2016-04-18 23:09
  * Obtain memory configuration information from the BIOS
  */
 #include <stand.h>
+#include <machine/cpufunc.h>
 #include "libi386.h"
 #include "btxv86.h"
 
 vm_offset_t	memtop, memtop_copyin, high_heap_base;
 uint32_t	bios_basemem, bios_extmem, high_heap_size;
+
+#define	PC98_SYS16M_PORT	0x43b
+#define	PC98_SYS16M_RAM_BIT	0x04
+#define	PC98_LOW16_FULL_UNITS	120	/* (16MiB - 1MiB) / 128KiB */
+
+uint8_t	pc98_sys16m_before, pc98_sys16m_after, pc98_low16_units;
+int	pc98_sys16m_ram;
 
 /*
  * The minimum amount of memory to reserve in bios_extmem for the heap.
@@ -45,10 +53,27 @@ uint32_t	bios_basemem, bios_extmem, high_heap_size;
 void
 bios_getmem(void)
 {
+	uint16_t over16;
+
+	/*
+	 * Select RAM, rather than the PEGC/system-space window, at 15-16MiB.
+	 * The port is read back and the BIOS work-area size must agree before
+	 * the loader treats memory above 15MiB as one continuous range.
+	 */
+	pc98_sys16m_before = inb(PC98_SYS16M_PORT);
+	outb(PC98_SYS16M_PORT,
+	    pc98_sys16m_before | PC98_SYS16M_RAM_BIT);
+	pc98_sys16m_after = inb(PC98_SYS16M_PORT);
+	pc98_low16_units = *(volatile uint8_t *)PTOV(0xA1401);
+	over16 = *(volatile uint16_t *)PTOV(0xA1594);
+	pc98_sys16m_ram =
+	    (pc98_sys16m_after & PC98_SYS16M_RAM_BIT) != 0 &&
+	    (over16 == 0 || pc98_low16_units >= PC98_LOW16_FULL_UNITS);
 
     bios_basemem = ((*(u_char *)PTOV(0xA1501) & 0x07) + 1) * 128 * 1024;
-    bios_extmem = *(u_char *)PTOV(0xA1401) * 128 * 1024 +
-	*(u_int16_t *)PTOV(0xA1594) * 1024 * 1024;
+    bios_extmem = pc98_low16_units * 128 * 1024;
+    if (pc98_sys16m_ram)
+	bios_extmem += over16 * 1024 * 1024;
 
     /* Set memtop to actual top of memory */
     memtop = memtop_copyin = 0x100000 + bios_extmem;
