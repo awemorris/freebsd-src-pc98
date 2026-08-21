@@ -276,8 +276,8 @@ bd_print(int verbose)
 
 	/* try to open the whole disk */
 	dev.dd.d_unit = i;
-	dev.d_slice = D_SLICENONE;
-	dev.d_partition = D_PARTNONE;
+	dev.disk.d_slice = D_SLICENONE;
+	dev.disk.d_partition = D_PARTNONE;
 	
 	if (!bd_opendisk(&od, &dev)) {
 
@@ -487,7 +487,7 @@ bd_opendisk(struct open_disk **odp, struct i386_devdesc *dev)
     error = 0;
     DEBUG("open '%s', unit 0x%x slice %d partition %d",
 	     i386_fmtdev(dev), dev->dd.d_unit,
-	     dev->d_slice, dev->d_partition);
+	     dev->disk.d_slice, dev->disk.d_partition);
 
     /* Get geometry for this open (removable device may have changed) */
     if (bd_getgeom(od)) {
@@ -540,7 +540,7 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
      */
     if (((u_char)buf[0x1fe] != 0x55) || ((u_char)buf[0x1ff] != 0xaa)) {
 	/* If a slice number was explicitly supplied, this is an error */
-	if (dev->d_slice > 0) {
+	if (dev->disk.d_slice > 0) {
 	    DEBUG("no slice table/MBR (no magic)");
 	    return (ENOENT);
 	}
@@ -562,7 +562,7 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
     dptr = &od->od_slicetab[0];
 
     /* Is this a request for the whole disk? */
-    if (dev->d_slice == D_SLICENONE) {
+    if (dev->disk.d_slice == D_SLICENONE) {
 	sector = 0;
 	goto unsliced;
     }
@@ -570,8 +570,8 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
     /*
      * if a slice number was supplied but not found, this is an error.
      */
-    if (dev->d_slice > 0) {
-	slice = dev->d_slice - 1;
+    if (dev->disk.d_slice > 0) {
+	slice = dev->disk.d_slice - 1;
         if (slice >= od->od_nslices) {
             DEBUG("slice %d not found", slice);
 	    return (ENOENT);
@@ -579,12 +579,12 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
     }
 
     /* Try to auto-detect the best slice; this should always give a slice number */
-    if (dev->d_slice == D_SLICEWILD) {
+    if (dev->disk.d_slice == D_SLICEWILD) {
 	slice = bd_bestslice(od);
         if (slice == -1) {
 	    return (ENOENT);
         }
-	dev->d_slice = slice;
+	dev->disk.d_slice = slice;
     }
 
     dptr = &od->od_slicetab[0];
@@ -592,21 +592,21 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
      * Accept the supplied slice number unequivocally (we may be looking
      * at a DOS partition).
      */
-    dptr += (dev->d_slice - 1);	/* we number 1-4, offsets are 0-3 */
+    dptr += (dev->disk.d_slice - 1); /* we number 1-4, offsets are 0-3 */
     sector = dptr->dp_scyl * od->od_hds * od->od_sec +
 	dptr->dp_shd * od->od_sec + dptr->dp_ssect;
     {
 	int end = dptr->dp_ecyl * od->od_hds * od->od_sec +
 	    dptr->dp_ehd * od->od_sec + dptr->dp_esect;
 	DEBUG("slice entry %d at %d, %d sectors",
-	      dev->d_slice - 1, sector, end-sector);
+	      dev->disk.d_slice - 1, sector, end-sector);
     }
 
     /*
      * If we are looking at a BSD slice, and the partition is < 0, assume the 'a' partition
      */
-    if ((dptr->dp_mid == __DOSMID_386BSD) && (dev->d_partition < 0))
-	dev->d_partition = 0;
+    if ((dptr->dp_mid == __DOSMID_386BSD) && (dev->disk.d_partition < 0))
+	dev->disk.d_partition = 0;
 
  unsliced:
     /* 
@@ -615,7 +615,7 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
      *
      * XXX we might want to check the label checksum.
      */
-    if (dev->d_partition < 0) {
+    if (dev->disk.d_partition < 0) {
 	od->od_boff = sector;		/* no partition, must be after the slice */
 	DEBUG("opening raw slice");
     } else {
@@ -633,21 +633,21 @@ bd_open_pc98(struct open_disk *od, struct i386_devdesc *dev)
 	    DEBUG("no disklabel");
 	    return (ENOENT);
 	}
-	if (dev->d_partition >= lp->d_npartitions) {
+	if (dev->disk.d_partition >= lp->d_npartitions) {
 	    DEBUG("partition '%c' exceeds partitions in table (a-'%c')",
-		  'a' + dev->d_partition, 'a' + lp->d_npartitions);
+		  'a' + dev->disk.d_partition, 'a' + lp->d_npartitions);
 	    return (EPART);
 	}
 
 #ifdef DISK_DEBUG
 	/* Complain if the partition is unused unless this is a floppy. */
-	if ((lp->d_partitions[dev->d_partition].p_fstype == FS_UNUSED) &&
+	if ((lp->d_partitions[dev->disk.d_partition].p_fstype == FS_UNUSED) &&
 	    !(od->od_flags & BD_FLOPPY))
 	    DEBUG("warning, partition marked as unused");
 #endif
 	
 	od->od_boff = 
-		lp->d_partitions[dev->d_partition].p_offset -
+		lp->d_partitions[dev->disk.d_partition].p_offset -
 		lp->d_partitions[RAW_PART].p_offset +
 		sector;
     }
@@ -1116,8 +1116,8 @@ bd_getdev(struct i386_devdesc *dev)
 	    unit = i;
     }
 
-    rootdev = MAKEBOOTDEV(major, dev->d_slice + 1, unit,
-	dev->d_partition);
+    rootdev = MAKEBOOTDEV(major, dev->disk.d_slice + 1, unit,
+	dev->disk.d_partition);
     DEBUG("dev is 0x%x\n", rootdev);
     return(rootdev);
 }

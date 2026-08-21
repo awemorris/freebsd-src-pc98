@@ -198,17 +198,17 @@ extract_currdev(void)
     /* new-style boot loaders such as pxeldr and cdldr */
     if (kargs->bootinfo == 0) {
 	/* We don't know what our boot device is; use the disk fallback. */
-	new_currdev.d_slice = D_SLICENONE;
-	new_currdev.d_partition = 0;
+	new_currdev.disk.d_slice = D_SLICENONE;
+	new_currdev.disk.d_partition = 0;
 	biosdev = -1;
     } else if ((initial_bootdev & B_MAGICMASK) != B_DEVMAGIC) {
 	/* The passed-in boot device is bad */
-	new_currdev.d_slice = D_SLICENONE;
-	new_currdev.d_partition = 0;
+	new_currdev.disk.d_slice = D_SLICENONE;
+	new_currdev.disk.d_partition = 0;
 	biosdev = -1;
     } else {
-	new_currdev.d_slice = B_SLICE(initial_bootdev) - 1;
-	new_currdev.d_partition = B_PARTITION(initial_bootdev);
+	new_currdev.disk.d_slice = B_SLICE(initial_bootdev) - 1;
+	new_currdev.disk.d_partition = B_PARTITION(initial_bootdev);
 	biosdev = initial_bootinfo->bi_bios_dev;
 	major = B_TYPE(initial_bootdev);
 
