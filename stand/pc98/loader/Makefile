@@ -28,6 +28,7 @@ HAVE_BCACHE=	yes
 HAVE_PNP=	yes
 HAVE_ISABUS=	yes
 HELP_FILES=	${BOOTSRC}/pc98/loader/help.pc98
+HELP_FILENAME=	loader.help.pc98
 
 .include	"${BOOTSRC}/loader.mk"
 
