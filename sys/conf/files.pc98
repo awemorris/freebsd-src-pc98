@@ -12,6 +12,14 @@ pc98/pc98/busio.s		standard
 pc98/pc98/busiosubr.c		standard
 pc98/pc98/pc98_entry.c		standard
 
+# PC-98 GDC text console and 8251 keyboard providers.
+pc98/cbus/gdc.c			optional gdc
+pc98/cbus/pckbd.c		optional pckbd
+pc98/cbus/pcrtc.c		standard
+pc98/cbus/scgdcrndr.c		optional sc gdc
+pc98/cbus/scvtb.c		optional sc
+pc98/cbus/syscons_cbus.c	optional sc
+
 # The long compile-with and dependency lines are required because of
 # limitations in config: backslash-newline doesn't work in strings, and
 # dependency lines other than the first are silently ignored.

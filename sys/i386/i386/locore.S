@@ -70,6 +70,12 @@ tmpstk:
 	.globl	bootinfo
 bootinfo:	.space	BOOTINFO_SIZE	/* bootinfo that we can handle */
 
+#ifdef PC98
+	.globl	pc98_system_parameter
+pc98_system_parameter:
+	.space	0x240
+#endif
+
 	.text
 /**********************************************************************
  *
@@ -78,8 +84,18 @@ bootinfo:	.space	BOOTINFO_SIZE	/* bootinfo that we can handle */
  */
 ENTRY(btext)
 
+#ifdef PC98
+	/* Preserve the BIOS system parameter block before reusing low memory. */
+	movl	$0xa1400,%esi
+	movl	$pc98_system_parameter,%edi
+	movl	$0x240,%ecx
+	cld
+	rep
+	movsb
+#else
 /* Tell the bios to warmboot next time */
 	movw	$0x1234,0x472
+#endif
 
 /* Set up a real frame in case the double return in newboot is executed. */
 	xorl	%ebp,%ebp

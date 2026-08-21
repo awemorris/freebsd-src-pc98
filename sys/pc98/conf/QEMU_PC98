@@ -20,3 +20,8 @@ options		INCLUDE_CONFIG_FILE
 device		loop
 device		ether
 device		pci
+
+# Native PC-98 text console and keyboard.
+device		pckbd
+device		gdc
+device		sc

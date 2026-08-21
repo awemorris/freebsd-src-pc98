@@ -3,3 +3,11 @@
 hint.attimer.0.at="isa"
 hint.attimer.0.port="0x71"
 hint.attimer.0.irq="0"
+
+hint.pcrtc.0.at="isa"
+
+hint.pckbd.0.at="isa"
+hint.pckbd.0.port="0x41"
+hint.pckbd.0.irq="1"
+hint.gdc.0.at="isa"
+hint.sc.0.at="isa"

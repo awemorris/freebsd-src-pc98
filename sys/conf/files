@@ -3238,7 +3238,7 @@ dev/syscons/scterm-dumb.c	optional sc !SC_NO_TERM_DUMB
 dev/syscons/scterm-sc.c		optional sc !SC_NO_TERM_SC
 dev/syscons/scterm-teken.c	optional sc !SC_NO_TERM_TEKEN
 dev/syscons/scvidctl.c		optional sc
-dev/syscons/scvtb.c		optional sc
+dev/syscons/scvtb.c		optional sc !gdc
 dev/syscons/snake/snake_saver.c	optional snake_saver
 dev/syscons/star/star_saver.c	optional star_saver
 dev/syscons/syscons.c		optional sc

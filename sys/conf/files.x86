@@ -86,7 +86,7 @@ dev/bxe/57712_init_values.c     optional	bxe pci
 dev/coretemp/coretemp.c		optional	coretemp
 dev/cpuctl/cpuctl.c		optional	cpuctl
 dev/dpms/dpms.c			optional	dpms
-dev/fb/fb.c			optional	fb | vga
+dev/fb/fb.c			optional	fb | vga | gdc
 dev/fb/s3_pci.c			optional	s3pci
 dev/fb/vesa.c			optional	vga vesa
 dev/fb/vga.c			optional	vga
@@ -328,7 +328,7 @@ dev/viawd/viawd.c		optional	viawd
 dev/vmd/vmd.c			optional	vmd | vmd_bus
 dev/wbwd/wbwd.c			optional	wbwd
 dev/wdatwd/wdatwd.c		optional	wdatwd
-isa/syscons_isa.c		optional	sc
+isa/syscons_isa.c		optional	sc !gdc
 isa/vga_isa.c			optional	vga
 libkern/strcmp.c		standard
 libkern/strncmp.c		standard
