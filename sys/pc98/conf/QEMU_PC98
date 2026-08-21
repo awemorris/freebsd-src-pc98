@@ -12,6 +12,10 @@ makeoptions	MODULES_OVERRIDE=""
 
 options		SCHED_4BSD
 options		FFS
+options		CD9660
+options		TMPFS
+options		PSEUDOFS
+options		GEOM_LABEL
 options		GEOM_PART_BSD
 options		GEOM_PART_PC98
 options		MD_ROOT
@@ -27,6 +31,11 @@ device		pci
 device		ata
 device		scbus
 device		da
+device		cd
+device		pass
+
+# Installer runtime support.
+device		md
 
 # Native PC-98 text console and keyboard.
 device		pckbd
