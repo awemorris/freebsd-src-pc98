@@ -4,6 +4,7 @@
 
 cpu		I686_CPU
 ident		QEMU_PC98
+hints		"QEMU_PC98.hints"
 
 # P0 is a monolithic bring-up kernel.  Architecture-independent modules are
 # intentionally deferred until the kernel entry and machine buses are proven.
