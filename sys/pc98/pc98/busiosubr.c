@@ -234,7 +234,7 @@ i386_memio_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size)
 {
 
 	if ((bsh->bsh_flags & BSH_OWN_MAPPING) != 0)
-		pmap_unmapdev((vm_offset_t)bsh->bsh_base, bsh->bsh_sz);
+		pmap_unmapdev((void *)bsh->bsh_base, bsh->bsh_sz);
 	i386_bus_space_handle_free(t, bsh, bsh->bsh_sz);
 }
 
