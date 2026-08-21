@@ -12,6 +12,8 @@ makeoptions	MODULES_OVERRIDE=""
 
 options		SCHED_4BSD
 options		FFS
+options		GEOM_PART_BSD
+options		GEOM_PART_PC98
 options		MD_ROOT
 options		KDB
 options		KDB_TRACE
