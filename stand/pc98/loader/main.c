@@ -238,9 +238,9 @@ extract_currdev(void)
 	new_currdev.dd.d_unit = 0;
     }
 
-    env_setenv("currdev", EV_VOLATILE, i386_fmtdev(&new_currdev),
+    env_setenv("currdev", EV_VOLATILE, devformat(&new_currdev.dd),
 	       gen_setcurrdev, env_nounset);
-    env_setenv("loaddev", EV_VOLATILE, i386_fmtdev(&new_currdev), env_noset,
+    env_setenv("loaddev", EV_VOLATILE, devformat(&new_currdev.dd), env_noset,
 	       env_nounset);
 }
 

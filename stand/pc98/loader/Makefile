@@ -22,7 +22,8 @@ NEWVERSWHAT?=	"bootstrap loader" pc98
 VERSION_FILE=	${BOOTSRC}/i386/loader/version
 
 .PATH:		${BOOTSRC}/pc98/loader ${BOOTSRC}/i386/loader
-SRCS=		main.c conf.c vers.c
+SRCS=		main.c conf.c vers.c gfx_bios.c
+CFLAGS.gfx_bios.c+=	-DBIOS_TEXT_ONLY
 
 HAVE_BCACHE=	yes
 HAVE_PNP=	yes

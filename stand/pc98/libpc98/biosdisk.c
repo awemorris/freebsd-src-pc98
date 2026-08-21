@@ -486,7 +486,7 @@ bd_opendisk(struct open_disk **odp, struct i386_devdesc *dev)
     od->od_boff = 0;
     error = 0;
     DEBUG("open '%s', unit 0x%x slice %d partition %d",
-	     i386_fmtdev(dev), dev->dd.d_unit,
+	     devformat(&dev->dd), dev->dd.d_unit,
 	     dev->disk.d_slice, dev->disk.d_partition);
 
     /* Get geometry for this open (removable device may have changed) */

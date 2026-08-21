@@ -80,6 +80,15 @@ time(time_t *t)
     return(now);
 }
 
+time_t
+getsecs(void)
+{
+	time_t now;
+
+	now = 0;
+	return (time(&now));
+}
+
 /*
  * Use the BIOS Wait function to pause for (period) microseconds.
  *
