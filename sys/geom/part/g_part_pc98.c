@@ -168,7 +168,8 @@ pc98_set_chs(struct g_part_table *table, uint32_t lba, u_short *cylp,
 {
 	uint32_t cyl, hd, sec;
 
-	sec = lba % table->gpt_sectors + 1;
+	/* PC-98 BIOS sector numbers, unlike IBM-PC CHS, are zero-based. */
+	sec = lba % table->gpt_sectors;
 	lba /= table->gpt_sectors;
 	hd = lba % table->gpt_heads;
 	lba /= table->gpt_heads;
@@ -220,6 +221,8 @@ g_part_pc98_add(struct g_part_table *basetable, struct g_part_entry *baseentry,
 	KASSERT(baseentry->gpe_end >= start + size - 1, (__func__));
 	baseentry->gpe_start = start;
 	baseentry->gpe_end = start + size - 1;
+	pc98_set_chs(basetable, baseentry->gpe_start, &entry->ent.dp_ipl_cyl,
+	    &entry->ent.dp_ipl_head, &entry->ent.dp_ipl_sct);
 	pc98_set_chs(basetable, baseentry->gpe_start, &entry->ent.dp_scyl,
 	    &entry->ent.dp_shd, &entry->ent.dp_ssect);
 	pc98_set_chs(basetable, baseentry->gpe_end, &entry->ent.dp_ecyl,

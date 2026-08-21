@@ -46,8 +46,13 @@
 #include "g_part_if.h"
 
 #define	BOOT1_SIZE	512
+#ifdef PC98
+/* PC-98 boot2 starts in the unused tail of the disklabel sector. */
+#define	BOOT2_OFF	(BOOT1_SIZE + sizeof(struct disklabel))
+#else
 #define	LABEL_SIZE	512
 #define	BOOT2_OFF	(BOOT1_SIZE + LABEL_SIZE)
+#endif
 #define	BOOT2_SIZE	(BBSIZE - BOOT2_OFF)
 
 FEATURE(geom_part_bsd, "GEOM partitioning class for BSD disklabels");
