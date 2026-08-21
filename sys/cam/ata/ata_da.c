@@ -3433,6 +3433,30 @@ adaerror(union ccb *ccb, uint32_t cam_flags, uint32_t sense_flags)
 	return(cam_periph_error(ccb, cam_flags, sense_flags));
 }
 
+#ifdef PC98
+static void
+ada_pc98_adjust_firmware_geometry(struct disk *disk)
+{
+	if (disk->d_mediasize < 4351LL * 1024 * 1024) {
+		disk->d_fwheads = 8;
+		disk->d_fwsectors = 17;
+	} else if (disk->d_mediasize < 30239LL * 1024 * 1024) {
+		if (disk->d_fwheads != 15)
+			disk->d_fwheads = 16;
+		disk->d_fwsectors = 63;
+	} else if (disk->d_mediasize < 32255LL * 1024 * 1024) {
+		disk->d_fwheads = 16;
+		disk->d_fwsectors = 63;
+	} else if (disk->d_mediasize < 130558LL * 1024 * 1024) {
+		disk->d_fwheads = 16;
+		disk->d_fwsectors = 255;
+	} else {
+		disk->d_fwheads = 255;
+		disk->d_fwsectors = 255;
+	}
+}
+#endif
+
 static void
 adasetgeom(struct ada_softc *softc, struct ccb_getdev *cgd)
 {
@@ -3540,6 +3564,9 @@ adasetgeom(struct ada_softc *softc, struct ccb_getdev *cgd)
 	}
 	softc->disk->d_fwsectors = softc->params.secs_per_track;
 	softc->disk->d_fwheads = softc->params.heads;
+#ifdef PC98
+	ada_pc98_adjust_firmware_geometry(softc->disk);
+#endif
 	softc->disk->d_rotation_rate = cgd->ident_data.media_rotation_rate;
 	snprintf(softc->disk->d_attachment, sizeof(softc->disk->d_attachment),
 	    "%s%d", softc->cpi.dev_name, softc->cpi.unit_number);
