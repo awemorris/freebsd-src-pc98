@@ -82,6 +82,11 @@ dd if="$work/slice.img" of="$output" bs=512 seek="$sectors_per_cylinder" \
 	conv=notrunc,sparse status=none
 
 expected_size=$((total_sectors * 512))
+# The filesystem size is rounded down to a 64-sector fragment boundary.  Some
+# dd implementations discard the zero-filled tail of a pre-sized sparse file,
+# so restore the full PC-98 geometry after copying the slice.
+truncate -s "$expected_size" "$output"
+
 actual_size=$(stat -f %z "$output")
 [ "$actual_size" -eq "$expected_size" ] || {
 	echo "image size mismatch: got $actual_size, expected $expected_size" >&2
