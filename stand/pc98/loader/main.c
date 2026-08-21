@@ -145,6 +145,10 @@ main(void)
      */
     bcache_init(32768, 512);
 
+    if (kargs->bootinfo == 0 &&
+	(kargs->bootflags & KARGS_FLAGS_CD) != 0)
+	bc_add(initial_bootdev);
+
     archsw.arch_autoload = i386_autoload;
     archsw.arch_getdev = i386_getdev;
     archsw.arch_copyin = i386_copyin;
@@ -194,15 +198,20 @@ extract_currdev(void)
 
     bzero(&new_currdev, sizeof(new_currdev));
 
-    /* The first restoration milestone supports BIOS disks only. */
+    /* Assume a BIOS disk unless cdboot explicitly identifies a CD. */
     new_currdev.dd.d_dev = &bioshd;
 
     /* new-style boot loaders such as pxeldr and cdldr */
     if (kargs->bootinfo == 0) {
-	/* We don't know what our boot device is; use the disk fallback. */
-	new_currdev.disk.d_slice = D_SLICENONE;
-	new_currdev.disk.d_partition = 0;
-	biosdev = -1;
+	if ((kargs->bootflags & KARGS_FLAGS_CD) != 0) {
+	    new_currdev.dd.d_dev = &bioscd;
+	    new_currdev.dd.d_unit = bc_bios2unit(initial_bootdev);
+	} else {
+	    /* We don't know what our boot device is; use the disk fallback. */
+	    new_currdev.disk.d_slice = D_SLICENONE;
+	    new_currdev.disk.d_partition = 0;
+	    biosdev = -1;
+	}
     } else if ((initial_bootdev & B_MAGICMASK) != B_DEVMAGIC) {
 	/* The passed-in boot device is bad */
 	new_currdev.disk.d_slice = D_SLICENONE;

@@ -44,12 +44,14 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/loader/conf.c 305125 2016-08-31 13:16:40Z
 
 /* Exported for libstand */
 struct devsw *devsw[] = {
+    &bioscd,
     &bioshd,
     NULL
 };
 
 struct fs_ops *file_system[] = {
     &ufs_fsops,
+    &cd9660_fsops,
     NULL
 };
 

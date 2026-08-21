@@ -9,7 +9,7 @@ SRCS=	bio.c biospci.c bootinfo.c bootinfo32.c devicename.c elf32_freebsd.c \
 	i386_copy.c i386_module.c nullconsole.c
 
 # PC-98 BIOS, disk, memory and console providers.
-SRCS+=	biosdisk.c biosmem.c biossmap.c comconsole.c pc98_sys.c time.c \
+SRCS+=	bioscd.c biosdisk.c biosmem.c biossmap.c comconsole.c pc98_sys.c time.c \
 	vidconsole.c
 
 BOOT_COMCONSOLE_PORT?=	0x238

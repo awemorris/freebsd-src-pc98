@@ -26,7 +26,14 @@
  * $FreeBSD: head/sys/boot/pc98/libpc98/libpc98.h 201339 2009-12-31 12:05:48Z nyan $
  */
 
+struct i386_devdesc;
+
 void set_machine_type(void);
+
+int bc_add(int biosdev);
+int bc_bios2unit(int biosdev);
+int bc_unit2bios(int unit);
+int bc_getdev(struct i386_devdesc *dev);
 
 extern uint8_t pc98_sys16m_before;
 extern uint8_t pc98_sys16m_after;
