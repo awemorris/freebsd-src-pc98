@@ -46,9 +46,13 @@ uint8_t	pc98_sys16m_before, pc98_sys16m_after, pc98_low16_units;
 int	pc98_sys16m_ram;
 
 /*
- * The minimum amount of memory to reserve in bios_extmem for the heap.
+ * A split, compressed kernel must remain available after its floppy has been
+ * removed because gzipfs rewinds while loading ELF segments.  Reserve a small
+ * high heap on machines with enough memory, independently of the low heap
+ * below 640 KiB.
  */
-#define	HEAP_MIN	(64 * 1024 * 1024)
+#define	HEAP_THRESHOLD	(32 * 1024 * 1024)
+#define	HEAP_SIZE	(4 * 1024 * 1024)
 
 void
 bios_getmem(void)
@@ -79,11 +83,12 @@ bios_getmem(void)
     memtop = memtop_copyin = 0x100000 + bios_extmem;
 
     /*
-     * If we have extended memory, use the last 3MB of 'extended' memory
-     * as a high heap candidate.
+     * If we have enough extended memory, use its last 4 MiB as a high heap
+     * candidate.  main() also lowers memtop_copyin to keep kernel loading out
+     * of this region.
      */
-    if (bios_extmem >= HEAP_MIN) {
-	high_heap_size = HEAP_MIN;
-	high_heap_base = memtop - HEAP_MIN;
+    if (bios_extmem >= HEAP_THRESHOLD) {
+	high_heap_size = HEAP_SIZE;
+	high_heap_base = memtop - HEAP_SIZE;
     }
 }    

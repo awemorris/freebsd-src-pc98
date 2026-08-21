@@ -46,6 +46,15 @@ bsdinstall_multicons_disabled()
 	esac
 }
 
+# The PC-98 console renders curses line-drawing characters as double-width
+# glyphs.  Its native keyboard map needs no interactive selection, and the CF
+# image provides swap for operation on low-memory machines.
+if [ "$(uname -m)" = "pc98" ]; then
+	export BSDDIALOG_FORCE_ASCII_LINES=1
+	export BSDINSTALL_LOW_MEMORY_OK=1
+	export BSDINSTALL_SKIP_KEYMAP=1
+fi
+
 # resolv.conf from DHCP ends up in here, so make sure the directory exists
 mkdir /tmp/bsdinstall_etc
 

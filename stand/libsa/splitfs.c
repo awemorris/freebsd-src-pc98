@@ -29,6 +29,14 @@
 #define NTRIES		(3)
 #define CONF_BUF	(512)
 #define SEEK_BUF	(512)
+#define CACHE_BLOCK	(64 * 1024)
+
+struct split_cache
+{
+    struct split_cache *next;
+    size_t used;
+    char data[CACHE_BLOCK];
+};
 
 struct split_file
 {
@@ -39,6 +47,9 @@ struct split_file
     int	  curfd;	/* Current file descriptor */
     off_t tot_pos;	/* Offset from the beginning of the sequence */
     off_t file_pos;	/* Offset from the beginning of the slice */
+    struct split_cache *cache;	/* Data read from removable media */
+    struct split_cache *cache_tail;
+    size_t cache_size;	/* Valid bytes in cache */
 };
 
 static int	split_openfile(struct split_file *sf);
@@ -47,6 +58,61 @@ static int	splitfs_close(struct open_file *f);
 static int	splitfs_read(struct open_file *f, void *buf, size_t size, size_t *resid);
 static off_t	splitfs_seek(struct open_file *f, off_t offset, int where);
 static int	splitfs_stat(struct open_file *f, struct stat *sb);
+
+static int
+split_cache_append(struct split_file *sf, const void *buf, size_t size)
+{
+    struct split_cache *block;
+    size_t amount;
+
+    while (size > 0) {
+	block = sf->cache_tail;
+	if (block == NULL || block->used == CACHE_BLOCK) {
+	    block = malloc(sizeof(*block));
+	    if (block == NULL)
+		return (ENOMEM);
+	    block->next = NULL;
+	    block->used = 0;
+	    if (sf->cache_tail == NULL)
+		sf->cache = block;
+	    else
+		sf->cache_tail->next = block;
+	    sf->cache_tail = block;
+	}
+	amount = min(size, CACHE_BLOCK - block->used);
+	bcopy(buf, block->data + block->used, amount);
+	block->used += amount;
+	sf->cache_size += amount;
+	buf = (const char *)buf + amount;
+	size -= amount;
+    }
+    return (0);
+}
+
+static size_t
+split_cache_read(struct split_file *sf, off_t offset, void *buf, size_t size)
+{
+    struct split_cache *block;
+    size_t amount, block_offset, copied;
+
+    block = sf->cache;
+    while (offset >= CACHE_BLOCK) {
+	block = block->next;
+	offset -= CACHE_BLOCK;
+    }
+    copied = 0;
+    block_offset = offset;
+    while (size > 0 && block != NULL) {
+	amount = min(size, block->used - block_offset);
+	bcopy(block->data + block_offset, buf, amount);
+	buf = (char *)buf + amount;
+	size -= amount;
+	copied += amount;
+	block = block->next;
+	block_offset = 0;
+    }
+    return (copied);
+}
 
 struct fs_ops splitfs_fsops = {
 	.fs_name = "split",
@@ -64,6 +130,7 @@ static void
 split_file_destroy(struct split_file *sf)
 {
     int i;
+    struct split_cache *block;
 
     if (sf->filesc > 0) {
 	for (i = 0; i < sf->filesc; i++) {
@@ -72,6 +139,10 @@ split_file_destroy(struct split_file *sf)
 	}
 	free(sf->filesv);
 	free(sf->descsv);
+    }
+    while ((block = sf->cache) != NULL) {
+	sf->cache = block->next;
+	free(block);
     }
     free(sf);
 }
@@ -191,17 +262,34 @@ static int
 splitfs_read(struct open_file *f, void *buf, size_t size, size_t *resid)
 {
     ssize_t nread;
-    size_t totread;
+    size_t cached, totread;
     struct split_file *sf;
 
     sf = (struct split_file *)f->f_fsdata;
     totread = 0;
     do {
+	/* A gzip rewind can revisit data from a floppy already removed. */
+	if (sf->tot_pos < (off_t)sf->cache_size) {
+	    cached = min(size - totread,
+		sf->cache_size - (size_t)sf->tot_pos);
+	    cached = split_cache_read(sf, sf->tot_pos, buf, cached);
+	    sf->tot_pos += cached;
+	    totread += cached;
+	    buf = (char *)buf + cached;
+	    continue;
+	}
+
 	nread = read(sf->curfd, buf, size - totread);
 
 	/* Error? */
 	if (nread == -1)
 	    return (errno);
+
+	if (nread > 0) {
+	    errno = split_cache_append(sf, buf, nread);
+	    if (errno != 0)
+		return (errno);
+	}
 
 	sf->tot_pos += nread;
 	sf->file_pos += nread;
@@ -234,17 +322,17 @@ splitfs_seek(struct open_file *f, off_t offset, int where)
 {
     int nread;
     size_t resid;
-    off_t new_pos, seek_by;
+    off_t seek_by, target;
     struct split_file *sf;
 
     sf = (struct split_file *)f->f_fsdata;
 
-    seek_by = offset;
     switch (where) {
     case SEEK_SET:
-	seek_by -= sf->tot_pos;
+	target = offset;
 	break;
     case SEEK_CUR:
+	target = sf->tot_pos + offset;
 	break;
     case SEEK_END:
 	panic("splitfs_seek: SEEK_END not supported");
@@ -254,6 +342,16 @@ splitfs_seek(struct open_file *f, off_t offset, int where)
 	return (-1);
     }
 
+	if (target < 0) {
+	    errno = EINVAL;
+	    return (-1);
+	}
+	if (target <= (off_t)sf->cache_size) {
+	    sf->tot_pos = target;
+	    return (target);
+	}
+
+	seek_by = target - sf->tot_pos;
     if (seek_by > 0) {
 	/*
 	 * Seek forward - implemented using splitfs_read(), because otherwise we'll be
@@ -280,19 +378,6 @@ splitfs_seek(struct open_file *f, off_t offset, int where)
 	free(tmp);
 	if (errno != 0)
 	    return (-1);
-    }
-
-    if (seek_by != 0) {
-	/* Seek backward or seek past the boundary of the last slice */
-	if (sf->file_pos + seek_by < 0)
-	    panic("splitfs_seek: can't seek past the beginning of the slice");
-	new_pos = lseek(sf->curfd, seek_by, SEEK_CUR);
-	if (new_pos < 0) {
-	    errno = EINVAL;
-	    return (-1);
-	}
-	sf->tot_pos += new_pos - sf->file_pos;
-	sf->file_pos = new_pos;
     }
 
     return (sf->tot_pos);

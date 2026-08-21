@@ -83,6 +83,8 @@ scheme_supports_labels(const char *scheme)
 		return (1);
 	if (strcmp(scheme, "GPT") == 0)
 		return (1);
+	if (strcmp(scheme, "PC98") == 0)
+		return (1);
 
 	return (0);
 }
@@ -245,6 +247,8 @@ choose_part_type(const char *def_scheme)
 		    "Bootable on most x86 systems and EFI aware ARM64" },
 		{"", false, 0, "MBR", "DOS Partitions",
 		    "Bootable on most x86 systems" },
+		{"", false, 0, "PC98", "NEC PC-98 Partition Table",
+		    "Bootable on NEC PC-98 systems" },
 	};
 
 	for (i = 0; i < (int)nitems(items); i++)
@@ -1135,10 +1139,12 @@ gpart_create(struct gprovider *pp, const char *default_type,
 	    HN_NOSPACE | HN_DECIMAL);
 	items[1].init = sizestr;
 
-	/* Special-case the MBR default type for nested partitions */
-	if (strcmp(scheme, "MBR") == 0) {
+	/* MBR and PC98 use nested BSD labels inside a FreeBSD slice. */
+	if (strcmp(scheme, "MBR") == 0 || strcmp(scheme, "PC98") == 0) {
 		items[0].init = "freebsd";
 		items[0].bottomdesc = "Filesystem type (e.g. freebsd, fat32)";
+		if (strcmp(scheme, "PC98") == 0)
+			items[3].init = "FreeBSD";
 	}
 
 	nitems = scheme_supports_labels(scheme) ? 4 : 3;
@@ -1323,7 +1329,14 @@ addpartform:
 	gctl_ro_param(r, "size", -1, sizestr);
 	snprintf(startstr, sizeof(startstr), "%jd", firstfree);
 	gctl_ro_param(r, "start", -1, startstr);
-	if (items[3].value != NULL && items[3].value[0] != '\0')
+	/*
+	 * PC-98 firmware uses the 16-byte partition name in the IPL selector.
+	 * Automatic and interactive whole-disk paths must never leave it empty.
+	 */
+	if (strcmp(scheme, "PC98") == 0 &&
+	    strcmp(items[0].value, "freebsd") == 0)
+		gctl_ro_param(r, "label", -1, "FreeBSD");
+	else if (items[3].value != NULL && items[3].value[0] != '\0')
 		gctl_ro_param(r, "label", -1, items[3].value);
 	gctl_add_param(r, "output", sizeof(output), output,
 	    GCTL_PARAM_WR | GCTL_PARAM_ASCII);

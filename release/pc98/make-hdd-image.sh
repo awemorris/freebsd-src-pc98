@@ -44,23 +44,30 @@ test -x "$base/sbin/bsdlabel"
 test -f "$base/usr/freebsd-dist/MANIFEST"
 
 # qemu-pc98 and real PC-98 firmware use 8 heads and 17 sectors per track.
-# Reserve cylinder zero for the IPL and partition table, and keep the FFS
-# partition size aligned to the 64-sector fragment size used below.
-cylinders=32768
+# PC-98 CHS has a 16-bit cylinder field.  The restored ATA compatibility code
+# uses 8 heads and 17 sectors below 4351 MiB, so use the largest complete
+# cylinder count below that boundary.  This produces a conventional 4.3 GB
+# PC-98 IDE image without crossing into the incompatible 16-head translation.
+# Reserve cylinder zero for the IPL and partition table, reserve 256 MiB for
+# swap, and align the FFS partition to the 64-sector fragment size used below.
+cylinders=65520
 sectors_per_cylinder=136
 total_sectors=$((cylinders * sectors_per_cylinder))
+swap_sectors=$((256 * 1024 * 1024 / 512))
 slice_sectors=$((total_sectors - sectors_per_cylinder))
-fs_sectors=$((slice_sectors / 64 * 64))
+fs_sectors=$(((slice_sectors - swap_sectors) / 64 * 64))
 slice_bytes=$((fs_sectors * 512))
 
 makefs -t ffs -B little -o version=2,bsize=32768,fsize=4096 \
 	-s "$slice_bytes" "$work/slice.img" "$base"
+truncate -s $((slice_sectors * 512)) "$work/slice.img"
 
 unit=$(mdconfig -a -t vnode -f "$work/slice.img")
 printf '%s\n' \
 	'8 partitions:' \
 	"  a: $fs_sectors 0 4.2BSD 4096 32768 0" \
-	"  c: $fs_sectors 0 unused 0 0" > "$work/label"
+	"  b: $swap_sectors $fs_sectors swap" \
+	"  c: $slice_sectors 0 unused 0 0" > "$work/label"
 "$base/sbin/bsdlabel" -R -B -b "$base/boot/boot" "$unit" "$work/label"
 fsck_ffs -n "/dev/${unit}a"
 mdconfig -d -u "$unit"
@@ -71,9 +78,9 @@ dd if="$base/boot/pc98boot" of="$output" bs=512 conv=notrunc status=none
 dd if=/dev/zero of="$work/pc98-table" bs=512 count=1 status=none
 
 # One active FreeBSD partition.  PC-98 CHS values are zero-based; the slice
-# begins at cylinder 1.  The end cylinder is 32767.  This byte layout matches
-# the image used for the standalone installation acceptance test.
-printf '\224\304\000\000\000\000\001\000\000\000\001\000\000\000\377\177Installer\000\000\000\000\000\000\000' | \
+# begins at cylinder 1 and ends at sector 16, head 7, cylinder 65519.
+# This describes the entire 4.3 GB image except for the reserved IPL cylinder.
+printf '\224\304\000\000\000\000\001\000\000\000\001\000\020\007\357\377Installer\000\000\000\000\000\000\000' | \
 	dd of="$work/pc98-table" bs=1 conv=notrunc status=none
 printf '\125\252' | \
 	dd of="$work/pc98-table" bs=1 seek=510 conv=notrunc status=none

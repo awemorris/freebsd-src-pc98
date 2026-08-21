@@ -334,7 +334,7 @@ query:
 		gpart_partition(disk, scheme);
 	}
 
-	if (strcmp(scheme, "MBR") == 0) {
+	if (strcmp(scheme, "PC98") == 0 || strcmp(scheme, "MBR") == 0) {
 		struct gmesh submesh;
 
 		if (geom_gettree(&submesh) == 0) {

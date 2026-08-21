@@ -26,6 +26,7 @@
  */
 
 #include <curses.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "bsddialog.h"
@@ -148,6 +149,8 @@ int bsddialog_initconf(struct bsddialog_conf *conf)
 	conf->x = BSDDIALOG_CENTER;
 	conf->shadow = true;
 	conf->text.cols_per_row = DEFAULT_COLS_PER_ROW;
+	if (getenv("BSDDIALOG_FORCE_ASCII_LINES") != NULL)
+		conf->ascii_lines = true;
 
 	return (BSDDIALOG_OK);
 }

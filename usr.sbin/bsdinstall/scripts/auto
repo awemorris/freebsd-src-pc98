@@ -184,7 +184,7 @@ mkdir $BSDINSTALL_TMPETC
 # With pkgbase, pkg OOM has been observed with QEMU-default 128 MiB memory size.
 # Ensure we have at least about 256 MiB (with an allowance for rounding etc.).
 physmem=$(($(sysctl -n hw.physmem) / 1048576))
-if [ $physmem -lt 200 ]; then
+if [ $physmem -lt 200 ] && [ -z "$BSDINSTALL_LOW_MEMORY_OK" ]; then
         bsddialog --backtitle "$OSNAME Installer" --title "Warning" \
 	    --msgbox "Insufficient physical memory (${physmem} MiB) detected. At least 256 MiB is recommended. The installer or installed system may not function correctly." 0 0
 fi

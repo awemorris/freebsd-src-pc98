@@ -52,6 +52,10 @@ struct devsw *devsw[] = {
 struct fs_ops *file_system[] = {
     &ufs_fsops,
     &cd9660_fsops,
+    &splitfs_fsops,
+#ifdef LOADER_GZIP_SUPPORT
+    &gzipfs_fsops,
+#endif
     NULL
 };
 
