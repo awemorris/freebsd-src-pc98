@@ -347,6 +347,7 @@ gpart_activate(struct gprovider *pp)
 	const char *errstr, *scheme;
 	const char *attribute = NULL;
 	intmax_t idx;
+	int pc98;
 
 	/*
 	 * Some partition schemes need this partition to be marked 'active'
@@ -359,8 +360,8 @@ gpart_activate(struct gprovider *pp)
 		}
 	}
 
-	if (strcmp(scheme, "MBR") == 0 || strcmp(scheme, "EBR") == 0 ||
-	    strcmp(scheme, "PC98") == 0)
+	pc98 = (strcmp(scheme, "PC98") == 0);
+	if (strcmp(scheme, "MBR") == 0 || strcmp(scheme, "EBR") == 0 || pc98)
 		attribute = "active";
 	else
 		return;
@@ -384,6 +385,21 @@ gpart_activate(struct gprovider *pp)
 		gpart_show_error("Error", "Error marking partition active:",
 		    errstr);
 	gctl_free(r);
+
+	/* The PC-98 boot selector treats active and bootable separately. */
+	if (pc98) {
+		r = gctl_get_handle();
+		gctl_ro_param(r, "class", -1, "PART");
+		gctl_ro_param(r, "arg0", -1, pp->lg_geom->lg_name);
+		gctl_ro_param(r, "verb", -1, "set");
+		gctl_ro_param(r, "attrib", -1, "bootable");
+		gctl_ro_param(r, "index", sizeof(idx), &idx);
+		errstr = gctl_issue(r);
+		if (errstr != NULL && errstr[0] != '\0')
+			gpart_show_error("Error",
+			    "Error marking partition bootable:", errstr);
+		gctl_free(r);
+	}
 }
 
 void

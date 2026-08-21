@@ -19,6 +19,7 @@ options		GEOM_LABEL
 options		GEOM_PART_BSD
 options		GEOM_PART_PC98
 options		MD_ROOT
+options		INET
 options		KDB
 options		KDB_TRACE
 options		INCLUDE_CONFIG_FILE
@@ -26,6 +27,9 @@ options		INCLUDE_CONFIG_FILE
 device		loop
 device		ether
 device		pci
+device		miibus
+device		fxp
+device		bpf
 
 # PC-98 bank-0 ATA controller and CAM disk support.
 device		ata
