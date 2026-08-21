@@ -1,0 +1,5 @@
+# Minimal ISA resources needed by the qemu-pc98 bring-up kernel.
+
+hint.attimer.0.at="isa"
+hint.attimer.0.port="0x71"
+hint.attimer.0.irq="0"
