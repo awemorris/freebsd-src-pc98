@@ -46,10 +46,12 @@ __FBSDID("$FreeBSD: head/sys/boot/pc98/loader/main.c 310225 2016-12-18 13:57:23Z
 #include "libpc98/libpc98.h"
 #include "btxv86.h"
 
-CTASSERT(sizeof(struct bootargs) == BOOTARGS_SIZE);
-CTASSERT(offsetof(struct bootargs, bootinfo) == BA_BOOTINFO);
-CTASSERT(offsetof(struct bootargs, bootflags) == BA_BOOTFLAGS);
-CTASSERT(offsetof(struct bootinfo, bi_size) == BI_SIZE);
+_Static_assert(sizeof(struct bootargs) == BOOTARGS_SIZE, "Bootarg size bad");
+_Static_assert(offsetof(struct bootargs, bootinfo) == BA_BOOTINFO,
+    "BA_BOOTINFO");
+_Static_assert(offsetof(struct bootargs, bootflags) == BA_BOOTFLAGS,
+    "BA_BOOTFLAGS");
+_Static_assert(offsetof(struct bootinfo, bi_size) == BI_SIZE, "BI_SIZE");
 
 /* Arguments passed in from the boot1/boot2 loader */
 static struct bootargs *kargs;
@@ -237,7 +239,7 @@ extract_currdev(void)
     }
 
     env_setenv("currdev", EV_VOLATILE, i386_fmtdev(&new_currdev),
-	       i386_setcurrdev, env_nounset);
+	       gen_setcurrdev, env_nounset);
     env_setenv("loaddev", EV_VOLATILE, i386_fmtdev(&new_currdev), env_noset,
 	       env_nounset);
 }

@@ -14,7 +14,8 @@ BOOT=	boot0.5
 # unless you are glutton for punishment.
 BOOT_BOOT0_ORG?=	0x0000
 
-LDFLAGS=-e start -Ttext ${BOOT_BOOT0_ORG} -Wl,-N,-T,${.CURDIR}/ldscript
+LDFLAGS=	-Wl,-e,start,-Ttext,${BOOT_BOOT0_ORG},--image-base,0 \
+		-Wl,-N,-T,${.CURDIR}/ldscript
 
 # The size of boot0.5 must be 7168 bytes
 ${BOOT}: ${BOOT}.bin

@@ -70,7 +70,8 @@ boot1: boot1.out
 	${OBJCOPY} -S -O binary boot1.out ${.TARGET}
 
 boot1.out: boot1.o
-	${LD} ${LD_FLAGS} -e start -Ttext ${ORG1} -o ${.TARGET} boot1.o
+	${LD} ${LD_FLAGS} --image-base 0 -e start -Ttext ${ORG1} \
+	    -o ${.TARGET} boot1.o
 
 CLEANFILES+=	boot2 boot2.ld boot2.ldr boot2.bin boot2.out boot2.o \
 		boot2.s boot2.s.tmp boot2.h sio.o
@@ -96,7 +97,8 @@ boot2.bin: boot2.out
 CFLAGS.ashldi3.c=	-Wno-missing-prototypes -Wno-missing-declarations
 CLEANFILES+=	ashldi3.o
 boot2.out: ${BTXCRT} boot2.o sio.o ashldi3.o
-	${LD} ${LD_FLAGS} -Ttext ${ORG2} -o ${.TARGET} ${.ALLSRC}
+	${LD} ${LD_FLAGS} --image-base 0 -Ttext ${ORG2} \
+	    -o ${.TARGET} ${.ALLSRC}
 
 boot2.o: boot2.s
 	${CC} ${ACFLAGS} -c boot2.s
