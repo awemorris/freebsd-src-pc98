@@ -19,6 +19,7 @@ CFLAGS+=	-DCOMSPEED=${BOOT_COMCONSOLE_SPEED}
 CFLAGS+=	-DTERM_EMU -Dalloca=__builtin_alloca
 CFLAGS+=	-I${BOOTSRC}/pc98 -I${BOOTSRC}/i386/libi386 \
 	-I${LDRSRC} -I${BOOTSRC}/i386/common -I${BTXLIB}
+CFLAGS.bootinfo.c+=	-I${SYSDIR}/teken -I${SRCTOP}/contrib/pnglite
 CFLAGS+=	-I${ZFSSRC} -I${SYSDIR}/cddl/boot/zfs \
 	-I${SYSDIR}/cddl/contrib/opensolaris/uts/common
 CFLAGS+=	${FORMAT_EXTENSIONS}
