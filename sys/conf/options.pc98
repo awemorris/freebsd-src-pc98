@@ -1,4 +1,3 @@
-# $FreeBSD$
 # Options specific to the PC-98 platform kernels
 
 AUTO_EOI_1		opt_auto_eoi.h
@@ -8,10 +7,8 @@ COUNT_XINVLTLB_HITS	opt_smp.h
 COUNT_IPIS		opt_smp.h
 DISABLE_PG_G		opt_pmap.h
 DISABLE_PSE		opt_pmap.h
-I586_PMC_GUPROF		opt_i586_guprof.h
 MAXMEM
 MPTABLE_FORCE_HTT
-MP_WATCHDOG
 NKPT			opt_pmap.h
 PERFMON
 PMAP_SHPGPERPROC	opt_pmap.h
@@ -22,22 +19,15 @@ PV_STATS		opt_pmap.h
 # they are handled like options for static filesystems
 # (see src/sys/conf/options), except for broken debugging options.
 COMPAT_AOUT		opt_dontuse.h
-IBCS2			opt_dontuse.h
 COMPAT_LINUX		opt_dontuse.h
 LINPROCFS		opt_dontuse.h
 LINSYSFS		opt_dontuse.h
-NDISAPI			opt_dontuse.h
 
 # Change KVM size.  Changes things all over the kernel.
 KVA_PAGES		opt_global.h
 
 # Physical address extensions and support for >4G ram.  As above.
 PAE			opt_global.h
-
-# Use PAE page tables, but limit memory support to 4GB.
-# This keeps the i386 non-PAE KBI, in particular, drivers see
-# 32bit vm_paddr_t.
-PAE_TABLES		opt_global.h
 
 TIMER_FREQ			opt_clock.h
 
@@ -74,13 +64,6 @@ I486_CPU		opt_global.h
 I586_CPU		opt_global.h
 I686_CPU		opt_global.h
 
-# options for serial support
-COM_ESP			opt_sio.h
-COM_MULTIPORT		opt_sio.h
-CONSPEED		opt_sio.h
-GDBSPEED		opt_sio.h
-COM_NO_ACPI		opt_sio.h
-
 # PC-98 platform and text console options.
 GDC
 LINE30			opt_syscons.h
@@ -108,9 +91,6 @@ ATKBD_DFLT_KEYMAP	opt_atkbd.h
 # Video spigot
 SPIGOT_UNSECURE		opt_spigot.h
 
-# Enables NETGRAPH support for Cronyx adapters
-NETGRAPH_CRONYX		opt_ng_cronyx.h
-
 # Device options
 DEV_APIC		opt_apic.h
 DEV_ATPIC		opt_atpic.h
@@ -121,8 +101,25 @@ NPX_DEBUG		opt_npx.h
 # BPF just-in-time compiler
 BPF_JITTER		opt_bpf.h
 
+# Hyper-V support
+DEV_HYPERV		opt_hyperv.h
+
 XENHVM			opt_global.h
 
 # options for the Intel C600 SAS driver (isci)
 ISCI_LOGGING	opt_isci.h
+
+# PC-98 MECIA bus-space support.
 DEV_MECIA		opt_mecia.h
+
+# Don't create a "legacy" PCI bridge if none is found.
+NO_LEGACY_PCIB		opt_cpu.h
+
+# Compatibility with Linux MP table bugs.
+MPTABLE_LINUX_BUG_COMPAT
+
+# x86 specific uart options
+UART_NS8250_EARLY_PORT	opt_uart.h
+
+# Enable asmc(4)-specific debug logic.
+ASMC_DEBUG		opt_asmc.h
