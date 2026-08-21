@@ -126,15 +126,17 @@ static int	bd_close(struct open_file *f);
 static int	bd_print(int verbose);
 
 struct devsw bioshd = {
-    "disk", 
-    DEVT_DISK, 
-    bd_init,
-    bd_strategy, 
-    bd_open, 
-    bd_close, 
-    noioctl,
-    bd_print,
-    NULL
+	.dv_name = "disk",
+	.dv_type = DEVT_DISK,
+	.dv_init = bd_init,
+	.dv_strategy = bd_strategy,
+	.dv_open = bd_open,
+	.dv_close = bd_close,
+	.dv_ioctl = noioctl,
+	.dv_print = bd_print,
+	.dv_cleanup = nullsys,
+	.dv_fmtdev = disk_fmtdev,
+	.dv_parsedev = disk_parsedev,
 };
 
 static int	bd_opendisk(struct open_disk **odp, struct i386_devdesc *dev);
@@ -680,7 +682,7 @@ static int
 bd_bestslice(struct open_disk *od)
 {
 	struct pc98_partition *dp;
-	int pref, preflevel;
+	int preflevel;
 	int i, prefslice;
 	
 	prefslice = 0;
@@ -692,10 +694,10 @@ bd_bestslice(struct open_disk *od)
 		case PC98_MID_386BSD:		/* FreeBSD */
 			if ((dp->dp_mid & PC98_MID_BOOTABLE) &&
 			    (preflevel > PREF_FBSD_ACT)) {
-				pref = i;
+				prefslice = i + 1;
 				preflevel = PREF_FBSD_ACT;
 			} else if (preflevel > PREF_FBSD) {
-				pref = i;
+				prefslice = i + 1;
 				preflevel = PREF_FBSD;
 			}
 			break;
@@ -708,10 +710,10 @@ bd_bestslice(struct open_disk *od)
 		case 0x63:
 			if ((dp->dp_mid & PC98_MID_BOOTABLE) &&
 			    (preflevel > PREF_DOS_ACT)) {
-				pref = i;
+				prefslice = i + 1;
 				preflevel = PREF_DOS_ACT;
 			} else if (preflevel > PREF_DOS) {
-				pref = i;
+				prefslice = i + 1;
 				preflevel = PREF_DOS;
 			}
 			break;
