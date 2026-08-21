@@ -55,6 +55,13 @@
 #include <isa/isareg.h>
 #include <isa/isavar.h>
 
+#ifdef PC98
+#undef IO_ICU1
+#undef IO_ICU2
+#define	IO_ICU1		0x000
+#define	IO_ICU2		0x008
+#endif
+
 #ifdef __amd64__
 #define	SDT_ATPIC	SDT_SYSIGT
 #define	GSEL_ATPIC	0
@@ -336,8 +343,10 @@ atpic_resume(struct pic *pic, bool suspend_cancelled)
 	struct atpic *ap = (struct atpic *)pic;
 
 	i8259_init(ap, ap == &atpics[SLAVE]);
+#ifndef PC98
 	if (ap == &atpics[SLAVE] && elcr_found)
 		elcr_resume();
+#endif
 }
 
 static int
@@ -366,6 +375,17 @@ atpic_config_intr(struct intsrc *isrc, enum intr_trigger trig,
 	if (ai->at_trigger == trig)
 		return (0);
 
+#ifdef PC98
+	if ((vector == 0 || vector == 1 || vector == 7 || vector == 8) &&
+	    trig == INTR_TRIGGER_LEVEL) {
+		if (bootverbose)
+			printf(
+		    "atpic: Ignoring invalid level/low configuration for IRQ%u\n",
+			    vector);
+		return (EINVAL);
+	}
+	return (ENXIO);
+#else
 	/*
 	 * Certain IRQs can never be level/lo, so don't try to set them
 	 * that way if asked.  At least some ELCR registers ignore setting
@@ -394,6 +414,7 @@ atpic_config_intr(struct intsrc *isrc, enum intr_trigger trig,
 	ai->at_trigger = trig;
 	spinlock_exit();
 	return (0);
+#endif
 }
 
 static int
@@ -443,8 +464,10 @@ i8259_init(struct atpic *pic, int slave)
 	outb(pic->at_ioaddr, OCW3_SEL | OCW3_RR);
 
 	/* OCW2_L1 sets priority order to 3-7, 0-2 (com2 first). */
+#ifndef PC98
 	if (!slave)
 		outb(pic->at_ioaddr, OCW2_R | OCW2_SL | OCW2_L1);
+#endif
 
 	spinlock_exit();
 }
@@ -471,6 +494,20 @@ atpic_startup(void)
 		    SEL_KPL, GSEL_ATPIC);
 	}
 
+#ifdef PC98
+	for (i = 0, ai = atintrs; i < NUM_ISA_IRQS; i++, ai++)
+		switch (i) {
+		case 0:
+		case 1:
+		case 7:
+		case 8:
+			ai->at_trigger = INTR_TRIGGER_EDGE;
+			break;
+		default:
+			ai->at_trigger = INTR_TRIGGER_LEVEL;
+			break;
+		}
+#else
 	/*
 	 * Look for an ELCR.  If we find one, update the trigger modes.
 	 * If we don't find one, assume that IRQs 0, 1, 2, and 13 are
@@ -500,6 +537,7 @@ atpic_startup(void)
 				break;
 			}
 	}
+#endif
 }
 
 static void
@@ -611,6 +649,8 @@ static driver_t atpic_driver = {
 };
 
 DRIVER_MODULE(atpic, isa, atpic_driver, 0, 0);
+#ifndef PC98
 DRIVER_MODULE(atpic, acpi, atpic_driver, 0, 0);
+#endif
 ISA_PNP_INFO(atpic_ids);
 #endif /* DEV_ISA */
