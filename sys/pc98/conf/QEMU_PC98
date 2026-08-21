@@ -21,6 +21,11 @@ device		loop
 device		ether
 device		pci
 
+# PC-98 bank-0 ATA controller and CAM disk support.
+device		ata
+device		scbus
+device		da
+
 # Native PC-98 text console and keyboard.
 device		pckbd
 device		gdc
