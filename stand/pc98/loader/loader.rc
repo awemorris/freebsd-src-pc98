@@ -1,0 +1,3 @@
+set vfs.root.mountfrom=ufs:/dev/ada0s1a
+load /boot/kernel/kernel
+boot
