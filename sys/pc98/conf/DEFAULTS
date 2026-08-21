@@ -5,13 +5,6 @@
 machine		pc98 i386
 options		PC98
 
-# Core PC-98 C-Bus and interrupt-controller selection.
-device		isa
-options		ISAPNP
-device		atpic
-
-# Privileged user interfaces required by i386 kernels.
-device		mem
-device		io
-
-options		NEW_PCIB
+# config(8) also reads sys/i386/conf/DEFAULTS for the i386 CPU
+# architecture.  Keep shared ISA, memory, I/O and ATPIC defaults there so
+# that this file contains only PC-98-owned policy.
