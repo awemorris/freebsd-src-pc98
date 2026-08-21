@@ -1,10 +1,30 @@
 #
-# DEFAULTS -- Default kernel configuration for FreeBSD/pc98
+# DEFAULTS -- Default kernel configuration for FreeBSD/pc98 on i386
 #
 
 machine		pc98 i386
 options		PC98
 
-# config(8) also reads sys/i386/conf/DEFAULTS for the i386 CPU
-# architecture.  Keep shared ISA, memory, I/O and ATPIC defaults there so
-# that this file contains only PC-98-owned policy.
+options		EARLY_AP_STARTUP
+
+# Bus support.
+device		isa
+options 	ISAPNP
+
+# Pseudo devices.
+device		mem		# Memory and kernel memory devices
+device		io		# I/O device
+
+# Default partitioning schemes
+options 	GEOM_PART_BSD
+options 	GEOM_PART_EBR
+options 	GEOM_PART_MBR
+options 	GEOM_PART_GPT
+
+# Default congestion control algorithm
+options 	CC_CUBIC		# include CUBIC congestion control
+
+# enable support for native hardware
+device		atpic
+
+options 	NETLINK			# netlink(4) support
