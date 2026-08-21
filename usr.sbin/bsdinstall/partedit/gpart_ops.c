@@ -359,7 +359,8 @@ gpart_activate(struct gprovider *pp)
 		}
 	}
 
-	if (strcmp(scheme, "MBR") == 0 || strcmp(scheme, "EBR") == 0)
+	if (strcmp(scheme, "MBR") == 0 || strcmp(scheme, "EBR") == 0 ||
+	    strcmp(scheme, "PC98") == 0)
 		attribute = "active";
 	else
 		return;
@@ -1561,4 +1562,3 @@ gpart_commit(struct gmesh *mesh)
 		gctl_free(r);
 	}
 }
-

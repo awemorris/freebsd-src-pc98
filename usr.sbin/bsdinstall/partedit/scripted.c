@@ -95,7 +95,8 @@ part_config(char *disk, const char *scheme, char *config)
 		gpart_destroy(gpart);
 	gpart_partition(disk, scheme);
 
-	if (strcmp(scheme, "MBR") == 0) {
+	/* PC98, like MBR, contains a FreeBSD slice with a BSD disklabel. */
+	if (strcmp(scheme, "PC98") == 0 || strcmp(scheme, "MBR") == 0) {
 		struct gmesh submesh;
 
 		if (geom_gettree(&submesh) == 0) {
@@ -230,4 +231,3 @@ scripted_editor(int argc, const char **argv)
 
 	return (0);
 }
-

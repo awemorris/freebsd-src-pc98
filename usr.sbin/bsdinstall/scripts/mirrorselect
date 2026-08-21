@@ -35,6 +35,28 @@ BSDCFG_SHARE="/usr/share/bsdconfig"
 : ${BSDDIALOG_ESC=5}
 : ${BSDDIALOG_ERROR=255}
 
+_UNAME_R=`uname -r`
+_UNAME_R=${_UNAME_R%-p*}
+
+case ${_UNAME_R} in
+	*-ALPHA*|*-CURRENT|*-STABLE|*-PRERELEASE)
+		RELDIR="snapshots"
+		;;
+	*)
+		RELDIR="releases"
+		;;
+esac
+
+# The FreeBSD mirrors do not carry distributions for the restored pc98
+# target.  Use the project distribution server by default.  An explicitly
+# supplied BSDINSTALL_DISTSITE still bypasses mirror selection as usual.
+if [ "`uname -m`" = "pc98" ]; then
+	BSDINSTALL_DISTSITE="http://noctvm.io/freebsd-pc98/${RELDIR}/pc98/`uname -p`/${_UNAME_R}"
+	export BSDINSTALL_DISTSITE
+	echo $BSDINSTALL_DISTSITE >&2
+	exit 0
+fi
+
 exec 5>&1
 MIRROR=`bsddialog --backtitle "$OSNAME Installer" \
     --title "Mirror Selection" --extra-button --extra-label "Other" \
@@ -91,18 +113,6 @@ MIRROR=`bsddialog --backtitle "$OSNAME Installer" \
     2>&1 1>&5`
 MIRROR_BUTTON=$?
 exec 5>&-
-
-_UNAME_R=`uname -r`
-_UNAME_R=${_UNAME_R%-p*}
-
-case ${_UNAME_R} in
-	*-ALPHA*|*-CURRENT|*-STABLE|*-PRERELEASE)
-		RELDIR="snapshots"
-		;;
-	*)
-		RELDIR="releases"
-		;;
-esac
 
 case ${MIRROR} in
 	*ftp*)
