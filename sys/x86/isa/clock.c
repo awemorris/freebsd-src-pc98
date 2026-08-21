@@ -67,8 +67,13 @@
 #include <machine/intr_machdep.h>
 #include <x86/apicvar.h>
 #include <x86/init.h>
+#ifdef PC98
+#include <machine/ppireg.h>
+#include <machine/timerreg.h>
+#else
 #include <x86/ppireg.h>
 #include <x86/timerreg.h>
+#endif
 
 #include <isa/rtc.h>
 #ifdef DEV_ISA
@@ -78,7 +83,11 @@
 
 int	clkintr_pending;
 #ifndef TIMER_FREQ
+#ifdef PC98
+#define TIMER_FREQ   2457600
+#else
 #define TIMER_FREQ   1193182
+#endif
 #endif
 u_int	i8254_freq = TIMER_FREQ;
 TUNABLE_INT("hw.i8254.freq", &i8254_freq);
@@ -161,7 +170,11 @@ timer_spkr_acquire(void)
 {
 	int mode;
 
+#ifdef PC98
+	mode = TIMER_SEL1 | TIMER_SQWAVE | TIMER_16BIT;
+#else
 	mode = TIMER_SEL2 | TIMER_SQWAVE | TIMER_16BIT;
+#endif
 
 	if (timer2_state != RELEASED)
 		return (-1);
@@ -174,7 +187,11 @@ timer_spkr_acquire(void)
 	 * and this is probably good enough for timer2, so we aren't as
 	 * careful with it as with timer0.
 	 */
+#ifdef PC98
+	outb(TIMER_MODE, TIMER_SEL1 | (mode & 0x3f));
+#else
 	outb(TIMER_MODE, TIMER_SEL2 | (mode & 0x3f));
+#endif
 
 	ppi_spkr_on();		/* enable counter2 output to speaker */
 	return (0);
@@ -187,7 +204,11 @@ timer_spkr_release(void)
 	if (timer2_state != ACQUIRED)
 		return (-1);
 	timer2_state = RELEASED;
+#ifdef PC98
+	outb(TIMER_MODE, TIMER_SEL1 | TIMER_SQWAVE | TIMER_16BIT);
+#else
 	outb(TIMER_MODE, TIMER_SEL2 | TIMER_SQWAVE | TIMER_16BIT);
+#endif
 
 	ppi_spkr_off();		/* disable counter2 output to speaker */
 	return (0);
@@ -199,8 +220,13 @@ timer_spkr_setfreq(int freq)
 
 	freq = i8254_freq / freq;
 	mtx_lock_spin(&clock_lock);
+#ifdef PC98
+	outb(TIMER_CNTR1, freq & 0xff);
+	outb(TIMER_CNTR1, freq >> 8);
+#else
 	outb(TIMER_CNTR2, freq & 0xff);
 	outb(TIMER_CNTR2, freq >> 8);
+#endif
 	mtx_unlock_spin(&clock_lock);
 }
 
@@ -290,7 +316,11 @@ i8254_delay(int n)
 	while (ticks_left > 0) {
 #ifdef KDB
 		if (kdb_active) {
+#ifdef PC98
+			outb(0x5f, 0);
+#else
 			inb(0x84);
+#endif
 			tick = prev_tick - 1;
 			if (tick <= 0)
 				tick = i8254_max_count;
