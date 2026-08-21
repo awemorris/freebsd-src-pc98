@@ -2,7 +2,9 @@
 #
 # Build a 1.44MB PC-98 staged installer floppy.  The floppy contains only
 # the PC-98 loader; the kernel, installation environment, and distribution
-# sets are read from the accompanying release ISO through the PC-98 BIOS.
+# sets are read from the PC-98 slice embedded in the accompanying release ISO.
+# Present that ISO as both a SCSI disk (for the loader BIOS) and an ATAPI CD
+# (for the kernel).
 #
 
 set -eu
@@ -36,8 +38,7 @@ test ! -e "$output"
 mkdir -p "$work/tree/boot"
 cp "$base/boot/loader_simp" "$work/tree/boot/loader"
 printf '%s\n' \
-	'set currdev=cd0:' \
-	'set loaddev=cd0:' \
+	'set currdev=disk1s1:' \
 	'set vfs.root.mountfrom=cd9660:/dev/cd0' \
 	'load /boot/kernel/kernel' \
 	'boot' > "$work/tree/boot/loader.rc"
