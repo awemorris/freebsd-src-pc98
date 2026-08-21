@@ -12,7 +12,15 @@ MACHINE_CPU = amd64 sse2 sse mmx
 . elif ${MACHINE_CPUARCH} == "arm"
 MACHINE_CPU = arm
 . elif ${MACHINE_CPUARCH} == "i386"
+.  if ${MACHINE} == "pc98"
+# The oldest supported PC-98 target is a Pentium (i586).  Clang's FreeBSD
+# i386 default may select CMOV instructions, so an explicit architecture is
+# required even when the user does not set CPUTYPE.
+_CPUCFLAGS = -march=pentium
+MACHINE_CPU = i586
+.  else
 MACHINE_CPU = i486
+.  endif
 . elif ${MACHINE_ARCH} == "powerpc"
 MACHINE_CPU = aim
 . elif ${MACHINE_ARCH} == "powerpc64"

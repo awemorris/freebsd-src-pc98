@@ -1,7 +1,8 @@
 #
-# QEMU_PC98 -- minimal Pentium-II/UP kernel for qemu-pc98
+# QEMU_PC98 -- Pentium-or-newer UP kernel for PC-98 and qemu-pc98
 #
 
+cpu		I586_CPU
 cpu		I686_CPU
 ident		QEMU_PC98
 hints		"QEMU_PC98.hints"
